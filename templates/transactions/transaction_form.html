@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Editar{% else %}Nova{% endif %} Transação - Sistema Contábil{% endblock %}
+
+{% block extra_css %}
+{{ form.media.css }}
+{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow rounded-lg p-6">
+    <h2 class="text-2xl font-bold mb-6">{% if form.instance.pk %}Editar{% else %}Nova{% endif %} Transação</h2>
+
+    <form method="post" class="space-y-6" id="transaction-form">
+        {% csrf_token %}
+        
+        {% include 'includes/form.html' with cancel_url='transaction_list' %}
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ form.media.js }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Adicionar datepicker ao campo de data
+        const dateField = document.querySelector('#id_date');
+        if (dateField) {
+            dateField.type = 'date';
+        }
+        
+        // Atualizar o indicador de equilíbrio após o envio do formulário
+        const form = document.getElementById('transaction-form');
+        if (form) {
+            form.addEventListener('submit', function() {
+                // Definir um flag para atualizar o indicador quando a página for carregada novamente
+                localStorage.setItem('updateBalanceIndicator', 'true');
+            });
+        }
+        
+        // Verificar se precisamos atualizar o indicador
+        if (localStorage.getItem('updateBalanceIndicator') === 'true') {
+            // Limpar o flag
+            localStorage.removeItem('updateBalanceIndicator');
+            
+            // Atualizar o indicador
+            if (typeof updateBalanceIndicator === 'function') {
+                updateBalanceIndicator();
+            }
+        }
+    });
+</script>
+{% endblock %}

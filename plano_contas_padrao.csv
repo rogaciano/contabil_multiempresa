@@ -1,0 +1,90 @@
+code,name,type,parent_code,description,is_active
+1,Ativo,A,,Contas de Ativo,true
+1.1,Ativo Circulante,A,1,Contas de Ativo Circulante,true
+1.1.1,Caixa,A,1.1,Dinheiro em espécie,true
+1.1.2,Bancos Conta Movimento,A,1.1,Contas bancárias de movimento,true
+1.1.3,Aplicações Financeiras,A,1.1,Investimentos de curto prazo,true
+1.1.4,Clientes,A,1.1,Contas a receber de clientes,true
+1.1.5,Estoques,A,1.1,Mercadorias e produtos em estoque,true
+1.1.6,Impostos a Recuperar,A,1.1,Créditos tributários,true
+1.1.7,Adiantamentos,A,1.1,Adiantamentos a fornecedores e funcionários,true
+1.1.8,Despesas Antecipadas,A,1.1,Despesas pagas antecipadamente,true
+1.2,Ativo Não Circulante,A,1,Contas de Ativo Não Circulante,true
+1.2.1,Realizável a Longo Prazo,A,1.2,Ativos que serão realizados após o exercício seguinte,true
+1.2.1.1,Clientes de Longo Prazo,A,1.2.1,Contas a receber de clientes de longo prazo,true
+1.2.1.2,Depósitos Judiciais,A,1.2.1,Depósitos judiciais e recursais,true
+1.2.2,Investimentos,A,1.2,Investimentos permanentes,true
+1.2.2.1,Participações Societárias,A,1.2.2,Participações em outras empresas,true
+1.2.2.2,Outros Investimentos,A,1.2.2,Outros investimentos permanentes,true
+1.2.3,Imobilizado,A,1.2,Bens tangíveis destinados à manutenção das atividades,true
+1.2.3.1,Terrenos,A,1.2.3,Terrenos de propriedade da empresa,true
+1.2.3.2,Edificações,A,1.2.3,Prédios e construções,true
+1.2.3.3,Máquinas e Equipamentos,A,1.2.3,Máquinas e equipamentos utilizados na operação,true
+1.2.3.4,Móveis e Utensílios,A,1.2.3,Mobiliário e utensílios,true
+1.2.3.5,Veículos,A,1.2.3,Veículos da empresa,true
+1.2.3.6,Equipamentos de Informática,A,1.2.3,Computadores e periféricos,true
+1.2.3.7,(-) Depreciação Acumulada,A,1.2.3,Depreciação acumulada dos bens do imobilizado,true
+1.2.4,Intangível,A,1.2,Ativos sem existência física,true
+1.2.4.1,Marcas e Patentes,A,1.2.4,Marcas e patentes registradas,true
+1.2.4.2,Softwares,A,1.2.4,Programas de computador,true
+1.2.4.3,(-) Amortização Acumulada,A,1.2.4,Amortização acumulada dos bens intangíveis,true
+2,Passivo,L,,Contas de Passivo,true
+2.1,Passivo Circulante,L,2,Contas de Passivo Circulante,true
+2.1.1,Fornecedores,L,2.1,Contas a pagar a fornecedores,true
+2.1.2,Empréstimos e Financiamentos,L,2.1,Empréstimos e financiamentos de curto prazo,true
+2.1.3,Obrigações Fiscais,L,2.1,Impostos e contribuições a recolher,true
+2.1.4,Obrigações Trabalhistas,L,2.1,Salários e encargos a pagar,true
+2.1.5,Obrigações Sociais,L,2.1,Contribuições sociais a recolher,true
+2.1.6,Adiantamento de Clientes,L,2.1,Valores recebidos antecipadamente de clientes,true
+2.1.7,Provisões,L,2.1,Provisões de curto prazo,true
+2.2,Passivo Não Circulante,L,2,Contas de Passivo Não Circulante,true
+2.2.1,Empréstimos e Financiamentos de Longo Prazo,L,2.2,Empréstimos e financiamentos de longo prazo,true
+2.2.2,Fornecedores de Longo Prazo,L,2.2,Contas a pagar a fornecedores de longo prazo,true
+2.2.3,Provisões de Longo Prazo,L,2.2,Provisões de longo prazo,true
+3,Patrimônio Líquido,E,,Contas de Patrimônio Líquido,true
+3.1,Capital Social,E,3,Capital integralizado pelos sócios,true
+3.2,Reservas de Capital,E,3,Reservas de capital,true
+3.3,Reservas de Lucros,E,3,Reservas constituídas com lucros,true
+3.4,Lucros ou Prejuízos Acumulados,E,3,Resultados acumulados,true
+3.5,Ajustes de Avaliação Patrimonial,E,3,Contrapartidas de aumentos ou diminuições de valor de elementos do ativo e passivo,true
+4,Receitas,R,,Contas de Receita,true
+4.1,Receitas Operacionais,R,4,Receitas da atividade principal,true
+4.1.1,Receita de Vendas,R,4.1,Receitas com vendas de mercadorias ou produtos,true
+4.1.2,Receita de Serviços,R,4.1,Receitas com prestação de serviços,true
+4.2,Deduções da Receita,R,4,Deduções da receita bruta,true
+4.2.1,Devoluções de Vendas,R,4.2,Mercadorias ou produtos devolvidos,true
+4.2.2,Abatimentos e Descontos,R,4.2,Abatimentos e descontos concedidos,true
+4.2.3,Impostos sobre Vendas,R,4.2,Impostos incidentes sobre vendas e serviços,true
+4.3,Receitas Financeiras,R,4,Receitas de natureza financeira,true
+4.3.1,Juros Ativos,R,4.3,Juros recebidos ou auferidos,true
+4.3.2,Descontos Obtidos,R,4.3,Descontos financeiros obtidos,true
+4.3.3,Rendimentos de Aplicações Financeiras,R,4.3,Rendimentos de aplicações financeiras,true
+4.4,Outras Receitas Operacionais,R,4,Outras receitas operacionais,true
+5,Despesas,X,,Contas de Despesa,true
+5.1,Custos,X,5,Custos dos produtos ou serviços,true
+5.1.1,Custo das Mercadorias Vendidas,X,5.1,Custo das mercadorias vendidas,true
+5.1.2,Custo dos Serviços Prestados,X,5.1,Custo dos serviços prestados,true
+5.2,Despesas Operacionais,X,5,Despesas operacionais,true
+5.2.1,Despesas com Pessoal,X,5.2,Despesas com funcionários,true
+5.2.1.1,Salários e Ordenados,X,5.2.1,Salários e ordenados,true
+5.2.1.2,Encargos Sociais,X,5.2.1,INSS e FGTS,true
+5.2.1.3,Benefícios a Empregados,X,5.2.1,Vale-transporte, alimentação, saúde, etc.,true
+5.2.2,Despesas Administrativas,X,5.2,Despesas administrativas,true
+5.2.2.1,Aluguéis,X,5.2.2,Aluguéis de imóveis e equipamentos,true
+5.2.2.2,Energia Elétrica,X,5.2.2,Consumo de energia elétrica,true
+5.2.2.3,Água e Esgoto,X,5.2.2,Consumo de água e serviços de esgoto,true
+5.2.2.4,Telefone e Internet,X,5.2.2,Serviços de telefonia e internet,true
+5.2.2.5,Material de Escritório,X,5.2.2,Material de uso e consumo no escritório,true
+5.2.2.6,Serviços de Terceiros,X,5.2.2,Serviços prestados por terceiros,true
+5.2.2.7,Depreciação e Amortização,X,5.2.2,Despesas com depreciação e amortização,true
+5.2.3,Despesas com Vendas,X,5.2,Despesas relacionadas às vendas,true
+5.2.3.1,Comissões sobre Vendas,X,5.2.3,Comissões pagas a vendedores,true
+5.2.3.2,Propaganda e Publicidade,X,5.2.3,Despesas com propaganda e publicidade,true
+5.2.3.3,Fretes e Carretos,X,5.2.3,Fretes e carretos sobre vendas,true
+5.3,Despesas Financeiras,X,5,Despesas de natureza financeira,true
+5.3.1,Juros Passivos,X,5.3,Juros pagos ou incorridos,true
+5.3.2,Descontos Concedidos,X,5.3,Descontos financeiros concedidos,true
+5.3.3,Despesas Bancárias,X,5.3,Tarifas e despesas bancárias,true
+5.4,Despesas Tributárias,X,5,Despesas com impostos e taxas,true
+5.4.1,Impostos e Taxas,X,5.4,Impostos e taxas diversas,true
+5.5,Outras Despesas Operacionais,X,5,Outras despesas operacionais,true

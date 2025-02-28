@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Razão Geral - Sistema Contábil{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow rounded-lg p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Razão Geral</h2>
+        <div class="flex space-x-2">
+            <form method="get" class="flex items-center space-x-2">
+                <div>
+                    <label for="account" class="block text-sm font-medium text-gray-700">Conta</label>
+                    <select id="account" name="account" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option value="">Selecione uma conta</option>
+                        {% for acc in accounts %}
+                        <option value="{{ acc.id }}" {% if account and account.id == acc.id %}selected{% endif %}>{{ acc.code }} - {{ acc.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="start_date" class="block text-sm font-medium text-gray-700">Data Inicial</label>
+                    <input type="date" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" 
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="end_date" class="block text-sm font-medium text-gray-700">Data Final</label>
+                    <input type="date" id="end_date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" 
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                </div>
+                <button type="submit" class="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Atualizar
+                </button>
+            </form>
+            {% if account %}
+            <a href="{% url 'report_export' report_type='GL' %}?account={{ account.id }}&start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}" 
+               class="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                Exportar CSV
+            </a>
+            <a href="{% url 'report_export_pdf' %}?report_type=GL&account={{ account.id }}&start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}" 
+               class="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                Exportar PDF
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if account %}
+    <div class="mb-6">
+        <div class="bg-gray-50 p-4 rounded-lg">
+            <h3 class="text-lg font-medium text-gray-900">{{ account.code }} - {{ account.name }}</h3>
+            <p class="text-sm text-gray-500">{{ account.description }}</p>
+            <p class="text-sm text-gray-500">Tipo: {{ account.get_type_display }}</p>
+        </div>
+        
+        <div class="mt-4 text-right">
+            <p class="text-sm text-gray-500">Período: {% if start_date %}{{ start_date|date:'d/m/Y' }}{% else %}Início{% endif %} a {% if end_date %}{{ end_date|date:'d/m/Y' }}{% else %}Hoje{% endif %}</p>
+        </div>
+        
+        <div class="mt-4 bg-indigo-50 p-4 rounded-lg">
+            <div class="flex justify-between items-center">
+                <span class="font-medium">Saldo Inicial:</span>
+                <span class="font-medium {% if initial_balance >= 0 %}text-green-700{% else %}text-red-700{% endif %}">
+                    R$ {{ initial_balance|currency }}
+                </span>
+            </div>
+        </div>
+        
+        <div class="mt-6 overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contrapartida</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Débito</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Crédito</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for movement in movements %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ movement.transaction.date|date:"d/m/Y" }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ movement.transaction.description }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {% if movement.transaction.debit_account == account %}
+                                {{ movement.transaction.credit_account.code }} - {{ movement.transaction.credit_account.name }}
+                            {% else %}
+                                {{ movement.transaction.debit_account.code }} - {{ movement.transaction.debit_account.name }}
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                            {% if movement.amount > 0 %}
+                                R$ {{ movement.amount|currency }}
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                            {% if movement.amount < 0 %}
+                                R$ {{ movement.amount|absolute|currency }}
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium {% if movement.balance >= 0 %}text-green-700{% else %}text-red-700{% endif %} text-right">
+                            R$ {{ movement.balance|currency }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">Nenhum movimento encontrado no período.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="mt-4 bg-indigo-50 p-4 rounded-lg">
+            <div class="flex justify-between items-center">
+                <span class="font-medium">Saldo Final:</span>
+                <span class="font-medium {% if final_balance >= 0 %}text-green-700{% else %}text-red-700{% endif %}">
+                    R$ {{ final_balance|currency }}
+                </span>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-gray-50 p-8 rounded-lg text-center">
+        <h3 class="text-lg font-medium text-gray-900 mb-2">Selecione uma conta para visualizar o razão</h3>
+        <p class="text-gray-500">Use o seletor acima para escolher uma conta e visualizar seus movimentos no período especificado.</p>
+    </div>
+    {% endif %}
+    
+    <div class="mt-6 text-sm text-gray-500">
+        <p>Relatório gerado em: {{ now|date:'d/m/Y H:i:s' }}</p>
+    </div>
+</div>
+{% endblock %}

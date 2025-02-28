@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ title }}</title>
+    <style>
+        @page {
+            size: {% if landscape %}A4 landscape{% else %}A4{% endif %};
+            margin: 2cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .header h1 {
+            font-size: 24px;
+            margin: 0;
+            color: #2d3748;
+        }
+        .company-info {
+            margin-bottom: 10px;
+        }
+        .report-info {
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .report-period {
+            text-align: right;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 6px 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .amount {
+            text-align: right;
+            white-space: nowrap;
+        }
+        .total {
+            font-weight: bold;
+            background-color: #f1f5f9;
+        }
+        .subtotal {
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+        .level-1 {
+            font-weight: bold;
+        }
+        .level-2 {
+            padding-left: 20px;
+        }
+        .level-3 {
+            padding-left: 40px;
+        }
+        .level-4 {
+            padding-left: 60px;
+        }
+        .level-5 {
+            padding-left: 80px;
+        }
+        .positive {
+            color: #047857;
+        }
+        .negative {
+            color: #dc2626;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ title }}</h1>
+        <div class="company-info">
+            {% if company %}
+                {{ company.name }} - CNPJ: {{ company.cnpj }}
+            {% else %}
+                Sistema Contábil
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="report-period">
+        Período: {{ start_date|date:'d/m/Y' }} a {{ end_date|date:'d/m/Y' }}
+    </div>
+    
+    {% block content %}{% endblock %}
+    
+    <div class="footer">
+        <p>Relatório gerado em: {{ now|date:'d/m/Y H:i:s' }}</p>
+        <p>Gerado por: {{ report.generated_by.get_full_name }}</p>
+        {% if report.notes %}
+            <p>Notas: {{ report.notes }}</p>
+        {% endif %}
+    </div>
+</body>
+</html>

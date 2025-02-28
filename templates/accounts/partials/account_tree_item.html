@@ -1,0 +1,22 @@
+<li>
+    <div class="account-item">
+        {% if account.children %}
+            <span class="toggle">-</span>
+        {% else %}
+            <span class="toggle" style="visibility: hidden;">+</span>
+        {% endif %}
+        
+        <a href="{% url 'account_detail' account.id %}" class="account-info">
+            <span class="text-sm font-medium">{{ account.code }} - {{ account.name }}</span>
+            <span class="account-type type-{{ account.type }}">{{ account.type_display }}</span>
+        </a>
+    </div>
+    
+    {% if account.children %}
+        <ul>
+            {% for child in account.children %}
+                {% include 'accounts/partials/account_tree_item.html' with account=child %}
+            {% endfor %}
+        </ul>
+    {% endif %}
+</li>

@@ -1,0 +1,70 @@
+{% extends 'reports/pdf/base_pdf.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="report-content">
+    <div class="section-title">Receitas</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Conta</th>
+                <th class="amount">Valor (R$)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for account, balance in revenues %}
+                <tr class="level-{{ account.level }}">
+                    <td>{{ account.code }} - {{ account.name }}</td>
+                    <td class="amount">{{ balance|currency }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="2">Nenhuma conta de receita encontrada.</td>
+                </tr>
+            {% endfor %}
+            <tr class="total">
+                <td>Total de Receitas</td>
+                <td class="amount positive">{{ total_revenue|currency }}</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <div class="section-title">Despesas</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Conta</th>
+                <th class="amount">Valor (R$)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for account, balance in expenses %}
+                <tr class="level-{{ account.level }}">
+                    <td>{{ account.code }} - {{ account.name }}</td>
+                    <td class="amount">{{ balance|currency }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="2">Nenhuma conta de despesa encontrada.</td>
+                </tr>
+            {% endfor %}
+            <tr class="total">
+                <td>Total de Despesas</td>
+                <td class="amount negative">{{ total_expenses|currency }}</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <div class="section-title">Resultado Líquido</div>
+    <table>
+        <tbody>
+            <tr class="total">
+                <td>Resultado Líquido (Lucro/Prejuízo)</td>
+                <td class="amount {% if net_income >= 0 %}positive{% else %}negative{% endif %}">
+                    {{ net_income|currency }}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}

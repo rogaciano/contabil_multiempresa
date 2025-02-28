@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Importar Contas - Sistema Contábil{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow rounded-lg p-6">
+    <h2 class="text-2xl font-bold mb-4">Importar Contas</h2>
+    
+    <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-blue-700">
+                    O arquivo CSV deve conter as seguintes colunas: <strong>code, name, type, parent_code, description, is_active</strong>.<br>
+                    O tipo deve ser um dos seguintes valores: <strong>A</strong> (Ativo), <strong>L</strong> (Passivo), <strong>E</strong> (Patrimônio Líquido), <strong>R</strong> (Receita), <strong>X</strong> (Despesa).<br>
+                    O campo parent_code deve conter o código da conta pai, ou ficar em branco para contas de primeiro nível.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-green-50 border-l-4 border-green-400 p-4 mb-6">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-green-700">
+                    <strong>Dica:</strong> Você pode usar o arquivo <strong>plano_contas_padrao.csv</strong> localizado na raiz do projeto como um plano de contas padrão completo, com todas as categorias essenciais para um sistema contábil.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+        
+        <div>
+            <label for="csv_file" class="block text-sm font-medium text-gray-700">Arquivo CSV</label>
+            <div class="mt-1">
+                <input type="file" name="csv_file" id="csv_file" class="block w-full text-sm text-gray-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-md file:border-0
+                    file:text-sm file:font-medium
+                    file:bg-indigo-50 file:text-indigo-700
+                    hover:file:bg-indigo-100
+                    focus:outline-none" required>
+            </div>
+        </div>
+        
+        <div class="flex items-center">
+            <input id="update_existing" name="update_existing" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+            <label for="update_existing" class="ml-2 block text-sm text-gray-900">
+                Atualizar contas existentes
+            </label>
+        </div>
+        
+        <div class="flex items-center justify-between">
+            <a href="{% url 'account_list' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                Cancelar
+            </a>
+            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                Importar
+            </button>
+        </div>
+    </form>
+    
+    <div class="mt-8">
+        <h3 class="text-lg font-medium mb-2">Exemplo de CSV</h3>
+        <pre class="bg-gray-50 p-4 rounded-md text-xs overflow-x-auto">
+code,name,type,parent_code,description,is_active
+1,Ativo,A,,Contas de Ativo,true
+1.1,Ativo Circulante,A,1,Contas de Ativo Circulante,true
+1.1.1,Caixa,A,1.1,Dinheiro em espécie,true
+2,Passivo,L,,Contas de Passivo,true
+2.1,Passivo Circulante,L,2,Contas de Passivo Circulante,true
+3,Patrimônio Líquido,E,,Contas de Patrimônio Líquido,true
+4,Receitas,R,,Contas de Receita,true
+5,Despesas,X,,Contas de Despesa,true
+        </pre>
+    </div>
+    
+    {% if results %}
+    <div class="mt-8">
+        <h3 class="text-lg font-medium mb-2">Resultados da Importação</h3>
+        <div class="bg-gray-50 p-4 rounded-md">
+            <p class="text-sm text-gray-900">
+                <strong>Total de linhas processadas:</strong> {{ results.total_rows }}<br>
+                <strong>Contas criadas:</strong> {{ results.created }}<br>
+                <strong>Contas atualizadas:</strong> {{ results.updated }}<br>
+                <strong>Erros:</strong> {{ results.errors }}
+            </p>
+            
+            {% if results.error_details %}
+            <div class="mt-4">
+                <h4 class="text-md font-medium mb-2">Detalhes dos Erros</h4>
+                <ul class="list-disc list-inside text-sm text-red-600">
+                    {% for error in results.error_details %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

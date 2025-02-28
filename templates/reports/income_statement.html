@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Demonstração do Resultado do Exercício (DRE) - Sistema Contábil{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow rounded-lg p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Demonstração do Resultado do Exercício (DRE)</h2>
+        <div class="flex space-x-2">
+            <form method="get" class="flex items-center space-x-2">
+                <div>
+                    <label for="start_date" class="block text-sm font-medium text-gray-700">Data Inicial</label>
+                    <input type="date" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" 
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="end_date" class="block text-sm font-medium text-gray-700">Data Final</label>
+                    <input type="date" id="end_date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" 
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                </div>
+                <button type="submit" class="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Atualizar
+                </button>
+            </form>
+            <a href="{% url 'report_export' report_type='IS' %}?start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}" 
+               class="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                Exportar CSV
+            </a>
+            <a href="{% url 'report_export_pdf' %}?report_type=IS&start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}" 
+               class="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                Exportar PDF
+            </a>
+        </div>
+    </div>
+    
+    <div class="text-right mb-4">
+        <p class="text-sm text-gray-500">Período: {{ start_date|date:'d/m/Y' }} a {{ end_date|date:'d/m/Y' }}</p>
+    </div>
+    
+    <div class="space-y-8">
+        <!-- Receitas -->
+        <div>
+            <h3 class="text-xl font-semibold mb-4 text-green-700 border-b pb-2">Receitas</h3>
+            <div class="space-y-4">
+                {% for account, balance in revenues %}
+                <div class="flex justify-between items-center {% if account.level > 1 %}pl-{{ account.level|add:"-1" }}{% endif %}">
+                    <span class="{% if account.is_leaf %}font-normal{% else %}font-semibold{% endif %}">
+                        {{ account.code }} - {{ account.name }}
+                    </span>
+                    <span class="{% if account.is_leaf %}font-normal{% else %}font-semibold{% endif %}">
+                        R$ {{ balance|currency }}
+                    </span>
+                </div>
+                {% empty %}
+                <p class="text-gray-500 italic">Nenhuma conta de receita encontrada.</p>
+                {% endfor %}
+                
+                <div class="flex justify-between items-center mt-4 pt-2 border-t border-gray-300 font-bold">
+                    <span>Total de Receitas</span>
+                    <span class="text-green-700">R$ {{ total_revenue|currency }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Despesas -->
+        <div>
+            <h3 class="text-xl font-semibold mb-4 text-red-700 border-b pb-2">Despesas</h3>
+            <div class="space-y-4">
+                {% for account, balance in expenses %}
+                <div class="flex justify-between items-center {% if account.level > 1 %}pl-{{ account.level|add:"-1" }}{% endif %}">
+                    <span class="{% if account.is_leaf %}font-normal{% else %}font-semibold{% endif %}">
+                        {{ account.code }} - {{ account.name }}
+                    </span>
+                    <span class="{% if account.is_leaf %}font-normal{% else %}font-semibold{% endif %}">
+                        R$ {{ balance|currency }}
+                    </span>
+                </div>
+                {% empty %}
+                <p class="text-gray-500 italic">Nenhuma conta de despesa encontrada.</p>
+                {% endfor %}
+                
+                <div class="flex justify-between items-center mt-4 pt-2 border-t border-gray-300 font-bold">
+                    <span>Total de Despesas</span>
+                    <span class="text-red-700">R$ {{ total_expenses|currency }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Resultado Líquido -->
+        <div class="mt-8 pt-4 border-t-2 border-gray-400">
+            <div class="flex justify-between items-center font-bold text-lg">
+                <span>Resultado Líquido (Lucro/Prejuízo)</span>
+                <span class="{% if net_income >= 0 %}text-green-700{% else %}text-red-700{% endif %}">
+                    R$ {{ net_income|currency }}
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-6 text-sm text-gray-500">
+        <p>Relatório gerado em: {{ now|date:'d/m/Y H:i:s' }}</p>
+        <p>Gerado por: {{ report.generated_by.get_full_name }}</p>
+        {% if report.notes %}
+        <p class="mt-2"><strong>Observações:</strong> {{ report.notes }}</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

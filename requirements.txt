@@ -1,0 +1,15 @@
+Django==5.0.2
+python-dotenv==1.0.1
+django-tailwind==3.8.0
+django-browser-reload==1.12.1
+django-crispy-forms==2.1
+crispy-tailwind==0.5.0
+pandas==2.2.1
+plotly==5.19.0
+gunicorn==21.2.0
+whitenoise==6.6.0
+django-filter==23.5
+django-tables2==2.7.0
+Pillow==11.1.0
+openpyxl==3.1.2
+reportlab==4.3.1

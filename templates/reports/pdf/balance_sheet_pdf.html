@@ -1,0 +1,72 @@
+{% extends 'reports/pdf/base_pdf.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="report-content">
+    <div class="section-title">Ativo</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Conta</th>
+                <th class="amount">Valor (R$)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for account, balance in assets %}
+                <tr class="level-{{ account.level }}">
+                    <td>{{ account.code }} - {{ account.name }}</td>
+                    <td class="amount">{{ balance|currency }}</td>
+                </tr>
+            {% endfor %}
+            <tr class="total">
+                <td>Total do Ativo</td>
+                <td class="amount">{{ total_assets|currency }}</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <div class="section-title">Passivo e Patrimônio Líquido</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Conta</th>
+                <th class="amount">Valor (R$)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for account, balance in liabilities %}
+                <tr class="level-{{ account.level }}">
+                    <td>{{ account.code }} - {{ account.name }}</td>
+                    <td class="amount">{{ balance|currency }}</td>
+                </tr>
+            {% endfor %}
+            <tr class="subtotal">
+                <td>Total do Passivo</td>
+                <td class="amount">{{ total_liabilities|currency }}</td>
+            </tr>
+            
+            {% for account, balance in equity %}
+                <tr class="level-{{ account.level }}">
+                    <td>{{ account.code }} - {{ account.name }}</td>
+                    <td class="amount">{{ balance|currency }}</td>
+                </tr>
+            {% endfor %}
+            <tr class="subtotal">
+                <td>Total do Patrimônio Líquido</td>
+                <td class="amount">{{ total_equity|currency }}</td>
+            </tr>
+            
+            <tr class="total">
+                <td>Total do Passivo e Patrimônio Líquido</td>
+                <td class="amount">{{ total_liabilities_equity|currency }}</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    {% if is_balanced %}
+        <p class="positive">O Balanço está equilibrado.</p>
+    {% else %}
+        <p class="negative">Atenção: O Balanço não está equilibrado. Diferença: R$ {{ difference|currency }}</p>
+    {% endif %}
+</div>
+{% endblock %}

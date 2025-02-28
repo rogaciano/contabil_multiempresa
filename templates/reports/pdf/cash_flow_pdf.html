@@ -1,0 +1,144 @@
+{% extends 'reports/pdf/base_pdf.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="report-content">
+    <div class="section-title">Saldo Inicial</div>
+    <table>
+        <tbody>
+            <tr>
+                <td>Saldo Inicial de Caixa</td>
+                <td class="amount">{{ initial_balance|currency }}</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <div class="section-title">Atividades Operacionais</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Descrição</th>
+                <th class="amount">Valor (R$)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in operational_activities %}
+                <tr>
+                    <td>{{ item.description }}</td>
+                    <td class="amount {% if item.amount >= 0 %}positive{% else %}negative{% endif %}">
+                        {{ item.amount|currency }}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="2">Nenhuma atividade operacional encontrada.</td>
+                </tr>
+            {% endfor %}
+            <tr class="total">
+                <td>Fluxo de Caixa Operacional Líquido</td>
+                <td class="amount {% if operational_net >= 0 %}positive{% else %}negative{% endif %}">
+                    {{ operational_net|currency }}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <div class="section-title">Atividades de Investimento</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Descrição</th>
+                <th class="amount">Valor (R$)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in investment_activities %}
+                <tr>
+                    <td>{{ item.description }}</td>
+                    <td class="amount {% if item.amount >= 0 %}positive{% else %}negative{% endif %}">
+                        {{ item.amount|currency }}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="2">Nenhuma atividade de investimento encontrada.</td>
+                </tr>
+            {% endfor %}
+            <tr class="total">
+                <td>Fluxo de Caixa de Investimento Líquido</td>
+                <td class="amount {% if investment_net >= 0 %}positive{% else %}negative{% endif %}">
+                    {{ investment_net|currency }}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <div class="section-title">Atividades de Financiamento</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Descrição</th>
+                <th class="amount">Valor (R$)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in financing_activities %}
+                <tr>
+                    <td>{{ item.description }}</td>
+                    <td class="amount {% if item.amount >= 0 %}positive{% else %}negative{% endif %}">
+                        {{ item.amount|currency }}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="2">Nenhuma atividade de financiamento encontrada.</td>
+                </tr>
+            {% endfor %}
+            <tr class="total">
+                <td>Fluxo de Caixa de Financiamento Líquido</td>
+                <td class="amount {% if financing_net >= 0 %}positive{% else %}negative{% endif %}">
+                    {{ financing_net|currency }}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <div class="section-title">Resumo</div>
+    <table>
+        <tbody>
+            <tr>
+                <td>Saldo Inicial</td>
+                <td class="amount">{{ initial_balance|currency }}</td>
+            </tr>
+            <tr>
+                <td>Fluxo de Caixa Operacional</td>
+                <td class="amount {% if operational_net >= 0 %}positive{% else %}negative{% endif %}">
+                    {{ operational_net|currency }}
+                </td>
+            </tr>
+            <tr>
+                <td>Fluxo de Caixa de Investimento</td>
+                <td class="amount {% if investment_net >= 0 %}positive{% else %}negative{% endif %}">
+                    {{ investment_net|currency }}
+                </td>
+            </tr>
+            <tr>
+                <td>Fluxo de Caixa de Financiamento</td>
+                <td class="amount {% if financing_net >= 0 %}positive{% else %}negative{% endif %}">
+                    {{ financing_net|currency }}
+                </td>
+            </tr>
+            <tr class="total">
+                <td>Saldo Final</td>
+                <td class="amount">{{ final_balance|currency }}</td>
+            </tr>
+            <tr>
+                <td>Variação no Período</td>
+                <td class="amount {% if final_balance >= initial_balance %}positive{% else %}negative{% endif %}">
+                    {{ final_balance|subtract:initial_balance|currency }}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}

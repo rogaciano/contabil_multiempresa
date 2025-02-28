@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Editar{% else %}Nova{% endif %} Conta - Sistema Contábil{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow rounded-lg p-6">
+    <h2 class="text-2xl font-bold mb-4">{% if form.instance.pk %}Editar{% else %}Nova{% endif %} Conta</h2>
+    
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+        
+        {% include 'includes/form.html' with cancel_url='account_list' %}
+    </form>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const typeField = document.getElementById('id_type');
+        const parentField = document.getElementById('id_parent');
+        
+        // Função para atualizar as opções do campo parent com base no tipo selecionado
+        function updateParentOptions() {
+            const selectedType = typeField.value;
+            
+            // Desabilitar o campo parent enquanto carrega
+            parentField.disabled = true;
+            
+            // Fazer uma requisição AJAX para obter as contas do tipo selecionado
+            fetch(`/accounts/api/by-type/${selectedType}/`)
+                .then(response => response.json())
+                .then(data => {
+                    // Limpar as opções atuais
+                    parentField.innerHTML = '<option value="">---------</option>';
+                    
+                    // Adicionar as novas opções
+                    data.forEach(account => {
+                        const option = document.createElement('option');
+                        option.value = account.id;
+                        option.textContent = `${account.code} - ${account.name}`;
+                        parentField.appendChild(option);
+                    });
+                    
+                    // Habilitar o campo parent novamente
+                    parentField.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar contas:', error);
+                    parentField.disabled = false;
+                });
+        }
+        
+        // Atualizar as opções quando o tipo for alterado
+        typeField.addEventListener('change', updateParentOptions);
+        
+        // Atualizar as opções quando a página carregar
+        if (typeField.value) {
+            updateParentOptions();
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

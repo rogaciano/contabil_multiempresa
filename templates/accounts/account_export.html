@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Exportar Contas - Sistema Contábil{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow rounded-lg p-6">
+    <h2 class="text-2xl font-bold mb-4">Exportar Contas</h2>
+    
+    <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-blue-700">
+                    Você pode exportar suas contas nos formatos CSV ou Excel. O arquivo exportado conterá as colunas: código, nome, tipo, código da conta pai, descrição e status (ativo/inativo).
+                    <br>
+                    Se a opção "Incluir saldo atual" estiver marcada, o saldo atual de cada conta também será incluído no arquivo exportado.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <form method="get" action="{% url 'account_export' %}" class="space-y-6">
+        <div>
+            <label for="account_type" class="block text-sm font-medium text-gray-700">Tipo de Conta</label>
+            <div class="mt-1">
+                <select id="account_type" name="type" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                    <option value="">Todos os tipos</option>
+                    {% for type_code, type_name in account_types %}
+                    <option value="{{ type_code }}">{{ type_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <div>
+            <label for="active_only" class="flex items-center">
+                <input type="checkbox" id="active_only" name="active_only" value="1" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                <span class="ml-2 text-sm text-gray-900">Apenas contas ativas</span>
+            </label>
+        </div>
+        
+        <div>
+            <label for="format" class="block text-sm font-medium text-gray-700">Formato</label>
+            <div class="mt-1">
+                <select id="format" name="format" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                    <option value="csv">CSV</option>
+                    <option value="excel">Excel</option>
+                </select>
+            </div>
+        </div>
+        
+        <div>
+            <label for="include_balance" class="flex items-center">
+                <input type="checkbox" id="include_balance" name="include_balance" value="1" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                <span class="ml-2 text-sm text-gray-900">Incluir saldo atual</span>
+            </label>
+        </div>
+        
+        <div class="flex items-center justify-between">
+            <a href="{% url 'account_list' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                Voltar para Lista
+            </a>
+            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                Exportar
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

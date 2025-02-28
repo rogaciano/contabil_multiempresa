@@ -1,0 +1,140 @@
+{% extends 'reports/pdf/base_pdf.html' %}
+
+{% block title %}Razão Geral - {{ account.code }} - {{ account.name }}{% endblock %}
+
+{% block content %}
+<style>
+    .general-ledger-table {
+        font-size: 10px;
+        width: 100%;
+    }
+    .general-ledger-table th, .general-ledger-table td {
+        padding: 2px 4px;
+    }
+    .general-ledger-table .amount {
+        white-space: nowrap;
+        text-align: right;
+    }
+    .general-ledger-table .date {
+        width: 10%;
+    }
+    .general-ledger-table .description {
+        width: 30%;
+    }
+    .general-ledger-table .counterpart {
+        width: 25%;
+    }
+    .general-ledger-table .debit {
+        width: 12%;
+    }
+    .general-ledger-table .credit {
+        width: 12%;
+    }
+    .general-ledger-table .balance {
+        width: 11%;
+    }
+    .account-info {
+        margin-bottom: 15px;
+        padding: 8px;
+        background-color: #f1f5f9;
+        border-radius: 4px;
+    }
+    .balance-info {
+        margin-top: 10px;
+        padding: 8px;
+        background-color: #e0f2fe;
+        border-radius: 4px;
+    }
+    .positive {
+        color: #047857;
+    }
+    .negative {
+        color: #b91c1c;
+    }
+</style>
+
+<div class="report-content">
+    <div class="section-title">Razão Geral</div>
+    
+    <div class="account-info">
+        <h3>{{ account.code }} - {{ account.name }}</h3>
+        <p>{{ account.description }}</p>
+        <p>Tipo: {{ account.get_type_display }}</p>
+    </div>
+    
+    <div class="balance-info">
+        <div style="display: flex; justify-content: space-between;">
+            <span style="font-weight: bold;">Saldo Inicial:</span>
+            <span style="font-weight: bold;" class="{% if initial_balance >= 0 %}positive{% else %}negative{% endif %}">
+                {{ initial_balance|currency }}
+            </span>
+        </div>
+    </div>
+    
+    <table class="general-ledger-table">
+        <colgroup>
+            <col class="date">
+            <col class="description">
+            <col class="counterpart">
+            <col class="debit">
+            <col class="credit">
+            <col class="balance">
+        </colgroup>
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Descrição</th>
+                <th>Contrapartida</th>
+                <th class="amount">Débito (R$)</th>
+                <th class="amount">Crédito (R$)</th>
+                <th class="amount">Saldo (R$)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for movement in movements %}
+                <tr>
+                    <td>{{ movement.transaction.date|date:"d/m/Y" }}</td>
+                    <td>{{ movement.transaction.description }}</td>
+                    <td>
+                        {% if movement.transaction.debit_account == account %}
+                            {{ movement.transaction.credit_account.code }} - {{ movement.transaction.credit_account.name }}
+                        {% else %}
+                            {{ movement.transaction.debit_account.code }} - {{ movement.transaction.debit_account.name }}
+                        {% endif %}
+                    </td>
+                    <td class="amount">
+                        {% if movement.amount > 0 %}
+                            {{ movement.amount|currency }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="amount">
+                        {% if movement.amount < 0 %}
+                            {{ movement.amount|absolute|currency }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="amount {% if movement.balance >= 0 %}positive{% else %}negative{% endif %}">
+                        {{ movement.balance|currency }}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center;">Nenhum movimento encontrado no período.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div class="balance-info" style="margin-top: 15px;">
+        <div style="display: flex; justify-content: space-between;">
+            <span style="font-weight: bold;">Saldo Final:</span>
+            <span style="font-weight: bold;" class="{% if final_balance >= 0 %}positive{% else %}negative{% endif %}">
+                {{ final_balance|currency }}
+            </span>
+        </div>
+    </div>
+</div>
+{% endblock %}

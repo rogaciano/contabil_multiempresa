@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Plano de Contas - Sistema Contábil{% endblock %}
+
+{% block extra_css %}
+<style>
+    .account-tree ul {
+        list-style-type: none;
+        padding-left: 1.5rem;
+    }
+    
+    .account-tree > ul {
+        padding-left: 0;
+    }
+    
+    .account-tree li {
+        margin: 0.5rem 0;
+    }
+    
+    .account-tree .toggle {
+        cursor: pointer;
+        display: inline-block;
+        width: 1rem;
+        text-align: center;
+        margin-right: 0.5rem;
+    }
+    
+    .account-tree .account-item {
+        display: flex;
+        align-items: center;
+    }
+    
+    .account-tree .account-info {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+    }
+    
+    .account-tree .account-info:hover {
+        background-color: rgba(79, 70, 229, 0.1);
+    }
+    
+    .account-tree .account-type {
+        margin-left: 0.5rem;
+        font-size: 0.75rem;
+        padding: 0.125rem 0.375rem;
+        border-radius: 9999px;
+    }
+    
+    .account-tree .type-A {
+        background-color: rgba(59, 130, 246, 0.1);
+        color: rgb(29, 78, 216);
+    }
+    
+    .account-tree .type-L {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: rgb(185, 28, 28);
+    }
+    
+    .account-tree .type-E {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: rgb(4, 120, 87);
+    }
+    
+    .account-tree .type-R {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: rgb(180, 83, 9);
+    }
+    
+    .account-tree .type-X {
+        background-color: rgba(107, 114, 128, 0.1);
+        color: rgb(55, 65, 81);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow rounded-lg p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Plano de Contas</h2>
+        <div class="flex space-x-2">
+            <a href="{% url 'account_import' %}" class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                Importar
+            </a>
+            <a href="{% url 'account_export' %}" class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Exportar
+            </a>
+            <a href="{% url 'account_list' %}" class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                </svg>
+                Visualizar Lista
+            </a>
+            <a href="{% url 'account_create' %}" class="inline-flex items-center px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Nova Conta
+            </a>
+        </div>
+    </div>
+    
+    <div class="mb-4">
+        <div class="flex space-x-2">
+            <button id="expand-all" class="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                Expandir Todos
+            </button>
+            <button id="collapse-all" class="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                Recolher Todos
+            </button>
+        </div>
+    </div>
+    
+    <div class="account-tree">
+        <div class="mb-4">
+            <h3 class="text-lg font-medium text-gray-900">Ativos</h3>
+            <ul id="asset-tree">
+                {% for account in account_tree.A %}
+                    {% include 'accounts/partials/account_tree_item.html' with account=account %}
+                {% empty %}
+                    <li class="text-sm text-gray-500">Nenhuma conta de ativo cadastrada</li>
+                {% endfor %}
+            </ul>
+        </div>
+        
+        <div class="mb-4">
+            <h3 class="text-lg font-medium text-gray-900">Passivos</h3>
+            <ul id="liability-tree">
+                {% for account in account_tree.L %}
+                    {% include 'accounts/partials/account_tree_item.html' with account=account %}
+                {% empty %}
+                    <li class="text-sm text-gray-500">Nenhuma conta de passivo cadastrada</li>
+                {% endfor %}
+            </ul>
+        </div>
+        
+        <div class="mb-4">
+            <h3 class="text-lg font-medium text-gray-900">Patrimônio Líquido</h3>
+            <ul id="equity-tree">
+                {% for account in account_tree.E %}
+                    {% include 'accounts/partials/account_tree_item.html' with account=account %}
+                {% empty %}
+                    <li class="text-sm text-gray-500">Nenhuma conta de patrimônio líquido cadastrada</li>
+                {% endfor %}
+            </ul>
+        </div>
+        
+        <div class="mb-4">
+            <h3 class="text-lg font-medium text-gray-900">Receitas</h3>
+            <ul id="revenue-tree">
+                {% for account in account_tree.R %}
+                    {% include 'accounts/partials/account_tree_item.html' with account=account %}
+                {% empty %}
+                    <li class="text-sm text-gray-500">Nenhuma conta de receita cadastrada</li>
+                {% endfor %}
+            </ul>
+        </div>
+        
+        <div class="mb-4">
+            <h3 class="text-lg font-medium text-gray-900">Despesas</h3>
+            <ul id="expense-tree">
+                {% for account in account_tree.X %}
+                    {% include 'accounts/partials/account_tree_item.html' with account=account %}
+                {% empty %}
+                    <li class="text-sm text-gray-500">Nenhuma conta de despesa cadastrada</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Função para alternar a visibilidade das contas filhas
+        function toggleChildren(event) {
+            const toggle = event.currentTarget;
+            const li = toggle.closest('li');
+            const ul = li.querySelector('ul');
+            
+            if (ul) {
+                const isExpanded = toggle.textContent === '-';
+                toggle.textContent = isExpanded ? '+' : '-';
+                ul.style.display = isExpanded ? 'none' : 'block';
+            }
+        }
+        
+        // Adicionar evento de clique a todos os toggles
+        document.querySelectorAll('.account-tree .toggle').forEach(toggle => {
+            toggle.addEventListener('click', toggleChildren);
+        });
+        
+        // Expandir todos
+        document.getElementById('expand-all').addEventListener('click', function() {
+            document.querySelectorAll('.account-tree ul').forEach(ul => {
+                ul.style.display = 'block';
+            });
+            
+            document.querySelectorAll('.account-tree .toggle').forEach(toggle => {
+                toggle.textContent = '-';
+            });
+        });
+        
+        // Recolher todos
+        document.getElementById('collapse-all').addEventListener('click', function() {
+            document.querySelectorAll('.account-tree ul').forEach(ul => {
+                if (ul.parentElement.parentElement.classList.contains('account-tree')) {
+                    // Não esconder os ULs de primeiro nível
+                    return;
+                }
+                ul.style.display = 'none';
+            });
+            
+            document.querySelectorAll('.account-tree .toggle').forEach(toggle => {
+                toggle.textContent = '+';
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sistema Contábil{% endblock %}</title>
+    {% load static %}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="{% static 'js/balance_indicator.js' %}"></script>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-50">
+    <!-- Navbar -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <!-- Logo -->
+                    <div class="flex-shrink-0 flex items-center">
+                        <a href="{% url 'dashboard' %}" class="text-xl font-bold text-gray-800">
+                            Sistema Contábil
+                        </a>
+                    </div>
+                    
+                    <!-- Menu Principal -->
+                    <div class="hidden md:ml-6 md:flex md:space-x-8">
+                        <a href="{% url 'dashboard' %}" class="inline-flex items-center px-1 pt-1 text-gray-900 {% if request.resolver_match.url_name == 'dashboard' %}border-b-2 border-indigo-500{% endif %}">
+                            Dashboard
+                        </a>
+                        <a href="{% url 'account_list' %}" class="inline-flex items-center px-1 pt-1 text-gray-500 hover:text-gray-900 {% if 'account' in request.resolver_match.url_name %}border-b-2 border-indigo-500{% endif %}">
+                            Contas
+                        </a>
+                        <a href="{% url 'transaction_list' %}" class="inline-flex items-center px-1 pt-1 text-gray-500 hover:text-gray-900 {% if 'transaction' in request.resolver_match.url_name %}border-b-2 border-indigo-500{% endif %}">
+                            Transações
+                        </a>
+                        <div class="relative group inline-flex items-center">
+                            <a href="#" class="inline-flex items-center px-1 pt-1 text-gray-500 hover:text-gray-900 {% if 'report' in request.resolver_match.url_name %}border-b-2 border-indigo-500{% endif %}">
+                                Relatórios
+                                <svg class="ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </a>
+                            <div class="absolute hidden group-hover:block w-48 bg-white shadow-lg py-1 rounded-md top-full">
+                                <a href="{% url 'balance_sheet' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Balanço Patrimonial</a>
+                                <a href="{% url 'income_statement' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">DRE</a>
+                                <a href="{% url 'cash_flow' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Fluxo de Caixa</a>
+                                <a href="{% url 'trial_balance' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Balancete</a>
+                                <a href="{% url 'general_ledger' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Razão</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Menu do Usuário -->
+                <div class="hidden md:ml-6 md:flex md:items-center">
+                    {% include 'partials/balance_indicator.html' %}
+                    
+                    <div class="ml-3 relative group">
+                        <button class="flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <span class="sr-only">Abrir menu do usuário</span>
+                            <img class="h-8 w-8 rounded-full" src="{% static 'img/default-avatar.png' %}" alt="">
+                        </button>
+                        <div class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 hidden group-hover:block">
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Seu Perfil</a>
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Configurações</a>
+                            <form method="post" action="{% url 'logout' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    Sair
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Menu Mobile -->
+                <div class="-mr-2 flex items-center md:hidden">
+                    <button type="button" class="mobile-menu-button inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
+                        <span class="sr-only">Abrir menu principal</span>
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Menu Mobile (expandido) -->
+        <div class="hidden mobile-menu md:hidden" x-data="{ reportsOpen: false }">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="{% url 'dashboard' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Dashboard</a>
+                <a href="{% url 'account_list' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Contas</a>
+                <a href="{% url 'transaction_list' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Transações</a>
+                <div>
+                    <button @click="reportsOpen = !reportsOpen" class="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">
+                        Relatórios
+                        <svg class="ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    <div x-show="reportsOpen" class="pl-4">
+                        <a href="{% url 'balance_sheet' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Balanço Patrimonial</a>
+                        <a href="{% url 'income_statement' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">DRE</a>
+                        <a href="{% url 'cash_flow' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Fluxo de Caixa</a>
+                        <a href="{% url 'trial_balance' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Balancete</a>
+                        <a href="{% url 'general_ledger' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Razão</a>
+                    </div>
+                </div>
+            </div>
+            <div class="pt-4 pb-3 border-t border-gray-200">
+                <div class="flex items-center px-4">
+                    <div class="flex-shrink-0">
+                        <img class="h-10 w-10 rounded-full" src="{% static 'img/default-avatar.png' %}" alt="">
+                    </div>
+                    <div class="ml-3">
+                        <div class="text-base font-medium text-gray-800">{{ user.get_full_name }}</div>
+                        <div class="text-sm font-medium text-gray-500">{{ user.email }}</div>
+                    </div>
+                </div>
+                <div class="mt-3 space-y-1">
+                    <a href="#" class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">Seu Perfil</a>
+                    <a href="#" class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">Configurações</a>
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="block w-full text-left px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">
+                            Sair
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Conteúdo Principal -->
+    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Mensagens -->
+        {% if messages %}
+        <div class="mb-8">
+            {% for message in messages %}
+            <div class="rounded-md p-4 {% if message.tags == 'success' %}bg-green-50{% elif message.tags == 'error' %}bg-red-50{% else %}bg-blue-50{% endif %} mb-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        {% if message.tags == 'success' %}
+                        <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                        {% elif message.tags == 'error' %}
+                        <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                        {% else %}
+                        <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                        </svg>
+                        {% endif %}
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium {% if message.tags == 'success' %}text-green-800{% elif message.tags == 'error' %}text-red-800{% else %}text-blue-800{% endif %}">
+                            {{ message }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Conteúdo da Página -->
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        // Menu Mobile
+        document.querySelector('.mobile-menu-button').addEventListener('click', function() {
+            document.querySelector('.mobile-menu').classList.toggle('hidden');
+        });
+        
+        // Inicializar Select2
+        $(document).ready(function() {
+            $('.select2-widget').select2();
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
