@@ -2,9 +2,11 @@ from django import forms
 from django_select2.forms import ModelSelect2Widget
 from .models import Transaction
 from accounts.models import Account
+from django.utils.translation import gettext_lazy as _
 
 class TransactionForm(forms.ModelForm):
     debit_account = forms.ModelChoiceField(
+        label=_('Conta de Débito'),
         queryset=Account.objects.filter(is_active=True),
         widget=ModelSelect2Widget(
             model=Account,
@@ -14,6 +16,7 @@ class TransactionForm(forms.ModelForm):
     )
     
     credit_account = forms.ModelChoiceField(
+        label=_('Conta de Crédito'),
         queryset=Account.objects.filter(is_active=True),
         widget=ModelSelect2Widget(
             model=Account,
