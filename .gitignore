@@ -1,0 +1,41 @@
+# Banco de dados SQLite
+db.sqlite3
+*.sqlite3
+*.db
+
+# Arquivos de mídia e uploads
+media/
+uploads/
+
+# Arquivos de ambiente
+.env
+.env.*
+!.env.example
+
+# Arquivos de cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Arquivos de IDE
+.idea/
+.vscode/
+*.swp
+*.swo
