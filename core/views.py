@@ -299,12 +299,26 @@ class FiscalYearCreateView(LoginRequiredMixin, CreateView):
     model = FiscalYear
     form_class = FiscalYearForm
     template_name = 'core/fiscal_year_form.html'
-    success_url = reverse_lazy('fiscal_year_list')
+    
+    def get_success_url(self):
+        # Verificar se existe um parâmetro 'next' na URL
+        next_url = self.request.GET.get('next')
+        if next_url:
+            return next_url
+        return reverse_lazy('fiscal_year_list')
     
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs['company'] = getattr(self.request, 'current_company', None)
         return kwargs
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Adicionar o parâmetro 'next' ao contexto para uso no template
+        context['next_url'] = self.request.GET.get('next', '')
+        # Adicionar informação de redirecionamento automático
+        context['from_transaction'] = 'next' in self.request.GET
+        return context
     
     def form_valid(self, form):
         form.instance.company = getattr(self.request, 'current_company', None)

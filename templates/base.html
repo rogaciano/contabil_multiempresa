@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -28,10 +28,28 @@
         .nav-link:hover {
             color: #111827; /* gray-900 */
         }
+        
+        /* Estilos para o layout com rodapé fixo */
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        main {
+            flex: 1;
+        }
+        
+        footer {
+            position: sticky;
+            bottom: 0;
+            width: 100%;
+            z-index: 10;
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-50 flex flex-col min-h-screen">
     <!-- Navbar -->
     <nav class="bg-white shadow-lg">
         <div class="max-w-7xl mx-auto px-4">
@@ -83,6 +101,22 @@
                                 <a href="{% url 'cash_flow' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Fluxo de Caixa</a>
                                 <a href="{% url 'trial_balance' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Balancete</a>
                                 <a href="{% url 'general_ledger' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Razão</a>
+                            </div>
+                        </div>
+                        <div class="relative" x-data="{ open: false }" @click.away="open = false">
+                            <a href="#" @click.prevent="open = !open" class="nav-link {% if 'company' in request.resolver_match.url_name or 'fiscal_year' in request.resolver_match.url_name %}active{% endif %} text-gray-500">
+                                Configurações
+                                <svg class="ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </a>
+                            <div x-show="open" class="absolute w-48 bg-white shadow-lg py-1 rounded-md top-full" style="display: none;">
+                                <a href="{% url 'company_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-building mr-2"></i> Empresas
+                                </a>
+                                <a href="{% url 'fiscal_year_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-calendar-alt mr-2"></i> Anos Fiscais
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -148,7 +182,7 @@
         </div>
         
         <!-- Menu Mobile (expandido) -->
-        <div class="hidden mobile-menu md:hidden" x-data="{ reportsOpen: false }">
+        <div class="hidden mobile-menu md:hidden" x-data="{ reportsOpen: false, configOpen: false }">
             <div class="px-2 pt-2 pb-3 space-y-1">
                 {% if user.is_authenticated and user.profile.companies.exists %}
                 <div class="px-3 py-2">
@@ -201,6 +235,28 @@
                         <a href="{% url 'general_ledger' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Razão</a>
                     </div>
                 </div>
+                <div x-data="{ configOpen: false }">
+                    <button @click="configOpen = !configOpen" class="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">
+                        Configurações
+                        <svg class="ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    <div x-show="configOpen" class="pl-4">
+                        <a href="{% url 'company_list' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">
+                            <i class="fas fa-building mr-2"></i> Empresas
+                        </a>
+                        <a href="{% url 'company_create' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">
+                            <i class="fas fa-plus-circle mr-2"></i> Nova Empresa
+                        </a>
+                        <a href="{% url 'fiscal_year_list' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">
+                            <i class="fas fa-calendar-alt mr-2"></i> Anos Fiscais
+                        </a>
+                        <a href="{% url 'fiscal_year_create' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">
+                            <i class="fas fa-plus-circle mr-2"></i> Novo Ano Fiscal
+                        </a>
+                    </div>
+                </div>
             </div>
             <div class="pt-4 pb-3 border-t border-gray-200">
                 <div class="flex items-center px-4">
@@ -236,7 +292,7 @@
     </nav>
 
     <!-- Conteúdo Principal -->
-    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 flex-1">
         <!-- Mensagens -->
         {% if messages %}
         <div class="mb-8">
@@ -272,6 +328,42 @@
         <!-- Conteúdo da Página -->
         {% block content %}{% endblock %}
     </main>
+
+    <!-- Rodapé com informações do ano fiscal -->
+    <footer class="bg-white border-t border-gray-200 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-3">
+            <div class="flex flex-col md:flex-row justify-between items-center text-sm text-gray-600">
+                <div class="flex items-center mb-2 md:mb-0">
+                    <span class="text-gray-500">&copy; {% now "Y" %} Sistema Contábil</span>
+                </div>
+                
+                {% if active_fiscal_year %}
+                <div class="flex items-center bg-blue-50 px-4 py-2 rounded-lg">
+                    <i class="fas fa-calendar-alt mr-2 text-blue-500"></i>
+                    <div>
+                        <span class="font-semibold">Ano Fiscal Ativo:</span> 
+                        <span class="mx-1">{{ active_fiscal_year.year }}</span>
+                        <span class="text-gray-500">|</span>
+                        <span class="mx-1">{{ active_fiscal_year.start_date|date:"d/m/Y" }} - {{ active_fiscal_year.end_date|date:"d/m/Y" }}</span>
+                        {% if active_fiscal_year.is_closed %}
+                        <span class="ml-2 bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded">Fechado</span>
+                        {% else %}
+                        <span class="ml-2 bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded">Aberto</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="flex items-center bg-yellow-50 px-4 py-2 rounded-lg">
+                    <i class="fas fa-exclamation-triangle mr-2 text-yellow-500"></i>
+                    <div>
+                        <span>Nenhum ano fiscal ativo</span>
+                        <a href="{% url 'fiscal_year_create' %}" class="ml-2 text-blue-600 hover:text-blue-800 underline">Cadastrar Ano Fiscal</a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </footer>
 
     <!-- Scripts -->
     <script>

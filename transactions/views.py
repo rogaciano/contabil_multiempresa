@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
@@ -7,10 +7,12 @@ from django.http import HttpResponse
 from django.db.models import Q
 import csv
 from datetime import datetime
+from django.urls import reverse
 
 from .models import Transaction
 from accounts.models import Account
 from .forms import TransactionForm
+from core.models import FiscalYear
 
 class TransactionListView(LoginRequiredMixin, ListView):
     model = Transaction
@@ -54,14 +56,25 @@ class TransactionListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
-        # Filtrar contas pela empresa atual
+        # Adicionar contas para o filtro
         company_id = self.request.session.get('current_company_id')
         if company_id:
             context['accounts'] = Account.objects.filter(company_id=company_id, is_active=True)
-        else:
-            context['accounts'] = Account.objects.filter(is_active=True)
-            
+        
         return context
+    
+    def dispatch(self, request, *args, **kwargs):
+        # Verificar se existe um ano fiscal ativo para a empresa atual
+        company_id = self.request.session.get('current_company_id')
+        if company_id:
+            # Verificar se existe pelo menos um ano fiscal para a empresa atual
+            has_fiscal_year = FiscalYear.objects.filter(company_id=company_id).exists()
+            if not has_fiscal_year:
+                messages.warning(request, 'Você precisa cadastrar um ano fiscal antes de acessar as transações.')
+                # Redirecionar para a criação de ano fiscal com parâmetro next
+                return redirect(f"{reverse('fiscal_year_create')}?next={reverse('transaction_list')}")
+        
+        return super().dispatch(request, *args, **kwargs)
 
 class TransactionDetailView(LoginRequiredMixin, DetailView):
     model = Transaction
@@ -72,6 +85,19 @@ class TransactionCreateView(LoginRequiredMixin, CreateView):
     template_name = 'transactions/transaction_form.html'
     form_class = TransactionForm
     success_url = reverse_lazy('transaction_list')
+    
+    def dispatch(self, request, *args, **kwargs):
+        # Verificar se existe um ano fiscal ativo para a empresa atual
+        company_id = self.request.session.get('current_company_id')
+        if company_id:
+            # Verificar se existe pelo menos um ano fiscal para a empresa atual
+            has_fiscal_year = FiscalYear.objects.filter(company_id=company_id).exists()
+            if not has_fiscal_year:
+                messages.warning(request, 'Você precisa cadastrar um ano fiscal antes de criar uma transação.')
+                # Redirecionar para a criação de ano fiscal com parâmetro next
+                return redirect(f"{reverse('fiscal_year_create')}?next={reverse('transaction_create')}")
+        
+        return super().dispatch(request, *args, **kwargs)
     
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -99,6 +125,20 @@ class TransactionUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'transactions/transaction_form.html'
     form_class = TransactionForm
     success_url = reverse_lazy('transaction_list')
+    
+    def dispatch(self, request, *args, **kwargs):
+        # Verificar se existe um ano fiscal ativo para a empresa atual
+        company_id = self.request.session.get('current_company_id')
+        if company_id:
+            # Verificar se existe pelo menos um ano fiscal para a empresa atual
+            has_fiscal_year = FiscalYear.objects.filter(company_id=company_id).exists()
+            if not has_fiscal_year:
+                messages.warning(request, 'Você precisa cadastrar um ano fiscal antes de editar uma transação.')
+                # Redirecionar para a criação de ano fiscal com parâmetro next
+                current_url = request.path
+                return redirect(f"{reverse('fiscal_year_create')}?next={current_url}")
+        
+        return super().dispatch(request, *args, **kwargs)
     
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
