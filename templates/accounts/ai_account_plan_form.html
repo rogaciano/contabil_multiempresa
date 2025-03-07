@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}Geração de Plano de Contas com IA{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h1 class="text-2xl font-bold text-gray-800 mb-2">{{ title }}</h1>
+        <p class="text-gray-600 mb-6">{{ subtitle }}</p>
+
+        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-blue-700">
+                        Este assistente usará inteligência artificial para gerar um plano de contas personalizado com base nas informações do seu negócio. Quanto mais detalhes você fornecer, melhor será o resultado.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <form method="post" class="space-y-6" id="ai-account-form">
+            {% csrf_token %}
+            
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6">
+                <h2 class="text-lg font-semibold text-gray-700 mb-4">Informações do Negócio</h2>
+                
+                <div class="mb-4">
+                    {{ form.business_type|as_crispy_field }}
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        {{ form.business_subtype|as_crispy_field }}
+                    </div>
+                    <div>
+                        {{ form.business_size|as_crispy_field }}
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    {{ form.tax_regime|as_crispy_field }}
+                </div>
+                
+                <div>
+                    {{ form.additional_details|as_crispy_field }}
+                </div>
+            </div>
+            
+            <div class="flex items-center justify-between">
+                <a href="{% url 'account_list' %}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50">
+                    Cancelar
+                </a>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                    Gerar Plano de Contas
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'accounts/js/loading_modal.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mostrar/ocultar campos adicionais com base no tipo de negócio selecionado
+        const businessTypeInputs = document.querySelectorAll('input[name="business_type"]');
+        const businessSubtypeField = document.querySelector('#div_id_business_subtype');
+        
+        businessTypeInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                if (this.value === 'outro') {
+                    businessSubtypeField.querySelector('label').textContent = 'Especifique o tipo de negócio *';
+                } else {
+                    businessSubtypeField.querySelector('label').textContent = 'Subtipo/Segmento *';
+                }
+            });
+        });
+        
+        // Adicionar manipulador de eventos para o formulário
+        const form = document.getElementById('ai-account-form');
+        form.addEventListener('submit', function() {
+            // Mostrar o modal de carregamento
+            window.LoadingModal.show(
+                'Gerando plano de contas', 
+                'Estamos utilizando IA para criar um plano de contas personalizado para o seu negócio. Isso pode levar alguns segundos...'
+            );
+        });
+    });
+</script>
+{% endblock %}

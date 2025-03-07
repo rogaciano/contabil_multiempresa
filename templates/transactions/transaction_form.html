@@ -23,6 +23,17 @@
 {{ form.media.js }}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Inicializar Select2 manualmente
+        if ($.fn.select2) {
+            $('.django-select2').select2({
+                width: '100%',
+                placeholder: function() {
+                    return $(this).data('placeholder');
+                },
+                allowClear: true
+            });
+        }
+        
         // Adicionar datepicker ao campo de data
         const dateField = document.querySelector('#id_date');
         if (dateField) {

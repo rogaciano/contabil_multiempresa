@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+    {% if form.instance.pk %}Editar Ano Fiscal{% else %}Novo Ano Fiscal{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-3xl mx-auto">
+        <div class="mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">
+                {% if form.instance.pk %}Editar Ano Fiscal{% else %}Novo Ano Fiscal{% endif %}
+            </h1>
+        </div>
+
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        {{ form.year|as_crispy_field }}
+                    </div>
+                    <div class="md:col-span-2">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                {{ form.start_date|as_crispy_field }}
+                            </div>
+                            <div>
+                                {{ form.end_date|as_crispy_field }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="md:col-span-2">
+                        {{ form.notes|as_crispy_field }}
+                    </div>
+                </div>
+                
+                <div class="flex justify-end mt-6 space-x-3">
+                    <a href="{% url 'fiscal_year_list' %}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">
+                        Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

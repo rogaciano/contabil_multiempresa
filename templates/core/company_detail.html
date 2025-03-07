@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ company.name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-3xl mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">{{ company.name }}</h1>
+            <div class="flex space-x-3">
+                <a href="{% url 'company_edit' company.id %}" class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded">
+                    <i class="fas fa-edit mr-2"></i> Editar
+                </a>
+                <a href="{% url 'company_list' %}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded">
+                    <i class="fas fa-arrow-left mr-2"></i> Voltar
+                </a>
+            </div>
+        </div>
+
+        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-500">CNPJ</h3>
+                        <p class="mt-1 text-lg text-gray-900">{{ company.tax_id }}</p>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-500">Telefone</h3>
+                        <p class="mt-1 text-lg text-gray-900">{{ company.phone|default:"Não informado" }}</p>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-500">Email</h3>
+                        <p class="mt-1 text-lg text-gray-900">{{ company.email|default:"Não informado" }}</p>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-500">Data de Cadastro</h3>
+                        <p class="mt-1 text-lg text-gray-900">{{ company.created_at|date:"d/m/Y" }}</p>
+                    </div>
+                    <div class="md:col-span-2">
+                        <h3 class="text-sm font-medium text-gray-500">Endereço</h3>
+                        <p class="mt-1 text-lg text-gray-900">{{ company.address|default:"Não informado"|linebreaks }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Estatísticas</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white shadow-md rounded-lg p-6">
+                    <h3 class="text-sm font-medium text-gray-500">Total de Contas</h3>
+                    <p class="mt-1 text-2xl font-semibold text-gray-900">{{ company.accounts.count }}</p>
+                </div>
+                <div class="bg-white shadow-md rounded-lg p-6">
+                    <h3 class="text-sm font-medium text-gray-500">Total de Transações</h3>
+                    <p class="mt-1 text-2xl font-semibold text-gray-900">{{ company.transactions.count }}</p>
+                </div>
+                <div class="bg-white shadow-md rounded-lg p-6">
+                    <h3 class="text-sm font-medium text-gray-500">Anos Fiscais</h3>
+                    <p class="mt-1 text-2xl font-semibold text-gray-900">{{ company.fiscal_years.count }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 flex justify-between">
+            <a href="{% url 'fiscal_year_list' %}?company={{ company.id }}" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">
+                <i class="fas fa-calendar-alt mr-2"></i> Ver Anos Fiscais
+            </a>
+            <a href="{% url 'account_list' %}?company={{ company.id }}" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded">
+                <i class="fas fa-book mr-2"></i> Ver Plano de Contas
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -21,6 +21,11 @@ class TransactionListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         queryset = super().get_queryset()
         
+        # Filtrar transações pela empresa atual
+        company_id = self.request.session.get('current_company_id')
+        if company_id:
+            queryset = queryset.filter(company_id=company_id)
+        
         # Filtros
         account_id = self.request.GET.get('account')
         start_date = self.request.GET.get('start_date')
@@ -48,7 +53,14 @@ class TransactionListView(LoginRequiredMixin, ListView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['accounts'] = Account.objects.filter(is_active=True)
+        
+        # Filtrar contas pela empresa atual
+        company_id = self.request.session.get('current_company_id')
+        if company_id:
+            context['accounts'] = Account.objects.filter(company_id=company_id, is_active=True)
+        else:
+            context['accounts'] = Account.objects.filter(is_active=True)
+            
         return context
 
 class TransactionDetailView(LoginRequiredMixin, DetailView):
@@ -61,8 +73,24 @@ class TransactionCreateView(LoginRequiredMixin, CreateView):
     form_class = TransactionForm
     success_url = reverse_lazy('transaction_list')
     
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Passar o ID da empresa atual para o formulário
+        kwargs['company_id'] = self.request.session.get('current_company_id')
+        return kwargs
+    
     def form_valid(self, form):
+        # Definir o usuário que criou a transação
         form.instance.created_by = self.request.user
+        
+        # Definir a empresa da transação
+        company_id = self.request.session.get('current_company_id')
+        if company_id:
+            form.instance.company_id = company_id
+        else:
+            messages.error(self.request, 'Selecione uma empresa antes de criar uma transação.')
+            return self.form_invalid(form)
+        
         messages.success(self.request, 'Transação criada com sucesso!')
         return super().form_valid(form)
 
@@ -71,6 +99,13 @@ class TransactionUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'transactions/transaction_form.html'
     form_class = TransactionForm
     success_url = reverse_lazy('transaction_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Passar o ID da empresa da transação para o formulário
+        transaction = self.get_object()
+        kwargs['company_id'] = transaction.company_id
+        return kwargs
     
     def form_valid(self, form):
         messages.success(self.request, 'Transação atualizada com sucesso!')
@@ -94,21 +129,36 @@ class TransactionImportView(LoginRequiredMixin, TemplateView):
             messages.error(request, 'Por favor, selecione um arquivo CSV para importar.')
             return super().get(request, *args, **kwargs)
         
+        # Obter a empresa atual
+        company_id = request.session.get('current_company_id')
+        if not company_id:
+            messages.error(request, 'Selecione uma empresa antes de importar transações.')
+            return super().get(request, *args, **kwargs)
+        
         try:
             decoded_file = csv_file.read().decode('utf-8').splitlines()
             reader = csv.DictReader(decoded_file)
             
             for row in reader:
-                Transaction.objects.create(
-                    date=datetime.strptime(row['date'], '%Y-%m-%d').date(),
-                    description=row['description'],
-                    debit_account=Account.objects.get(code=row['debit_account']),
-                    credit_account=Account.objects.get(code=row['credit_account']),
-                    amount=row['amount'],
-                    document_number=row.get('document_number', ''),
-                    notes=row.get('notes', ''),
-                    created_by=request.user
-                )
+                # Buscar contas apenas da empresa atual
+                try:
+                    debit_account = Account.objects.get(code=row['debit_account'], company_id=company_id)
+                    credit_account = Account.objects.get(code=row['credit_account'], company_id=company_id)
+                    
+                    Transaction.objects.create(
+                        company_id=company_id,
+                        date=datetime.strptime(row['date'], '%Y-%m-%d').date(),
+                        description=row['description'],
+                        debit_account=debit_account,
+                        credit_account=credit_account,
+                        amount=row['amount'],
+                        document_number=row.get('document_number', ''),
+                        notes=row.get('notes', ''),
+                        created_by=request.user
+                    )
+                except Account.DoesNotExist:
+                    messages.error(request, f'Conta não encontrada para a empresa atual: {row["debit_account"]} ou {row["credit_account"]}')
+                    continue
             
             messages.success(request, 'Transações importadas com sucesso!')
         except Exception as e:
@@ -129,6 +179,14 @@ class TransactionExportView(LoginRequiredMixin, View):
         
         # Aplicar os mesmos filtros da lista de transações
         transactions = Transaction.objects.all()
+        
+        # Filtrar pela empresa atual
+        company_id = request.session.get('current_company_id')
+        if company_id:
+            transactions = transactions.filter(
+                Q(debit_account__company_id=company_id) | 
+                Q(credit_account__company_id=company_id)
+            )
         
         # Filtros
         account_id = request.GET.get('account')
@@ -176,6 +234,15 @@ class JournalView(LoginRequiredMixin, ListView):
     
     def get_queryset(self):
         queryset = super().get_queryset()
+        
+        # Filtrar pela empresa atual
+        company_id = self.request.session.get('current_company_id')
+        if company_id:
+            queryset = queryset.filter(
+                Q(debit_account__company_id=company_id) | 
+                Q(credit_account__company_id=company_id)
+            )
+        
         start_date = self.request.GET.get('start_date')
         end_date = self.request.GET.get('end_date')
         
@@ -185,3 +252,15 @@ class JournalView(LoginRequiredMixin, ListView):
             queryset = queryset.filter(date__lte=end_date)
             
         return queryset.order_by('date', 'created_at')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Filtrar contas pela empresa atual
+        company_id = self.request.session.get('current_company_id')
+        if company_id:
+            context['accounts'] = Account.objects.filter(company_id=company_id, is_active=True)
+        else:
+            context['accounts'] = Account.objects.filter(is_active=True)
+            
+        return context

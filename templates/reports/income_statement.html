@@ -42,12 +42,19 @@
     <div class="space-y-8">
         <!-- Receitas -->
         <div>
-            <h3 class="text-xl font-semibold mb-4 text-green-700 border-b pb-2">Receitas</h3>
+            <h3 class="text-xl font-semibold mb-4 text-green-700 border-b pb-2">Receitas Brutas</h3>
             <div class="space-y-4">
                 {% for account, balance in revenues %}
                 <div class="flex justify-between items-center {% if account.level > 1 %}pl-{{ account.level|add:"-1" }}{% endif %}">
                     <span class="{% if account.is_leaf %}font-normal{% else %}font-semibold{% endif %}">
-                        {{ account.code }} - {{ account.name }}
+                        {% if account.is_leaf %}
+                        <a href="{% url 'general_ledger' %}?account={{ account.id }}&start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}" 
+                           class="text-blue-600 hover:text-blue-800 hover:underline">
+                            {{ account.code }} - {{ account.name }}
+                        </a>
+                        {% else %}
+                            {{ account.code }} - {{ account.name }}
+                        {% endif %}
                     </span>
                     <span class="{% if account.is_leaf %}font-normal{% else %}font-semibold{% endif %}">
                         R$ {{ balance|currency }}
@@ -58,9 +65,48 @@
                 {% endfor %}
                 
                 <div class="flex justify-between items-center mt-4 pt-2 border-t border-gray-300 font-bold">
-                    <span>Total de Receitas</span>
+                    <span>Total de Receitas Brutas</span>
                     <span class="text-green-700">R$ {{ total_revenue|currency }}</span>
                 </div>
+            </div>
+        </div>
+        
+        <!-- Deduções da Receita -->
+        <div>
+            <h3 class="text-xl font-semibold mb-4 text-orange-700 border-b pb-2">Deduções da Receita</h3>
+            <div class="space-y-4">
+                {% for account, balance in deductions %}
+                <div class="flex justify-between items-center {% if account.level > 1 %}pl-{{ account.level|add:"-1" }}{% endif %}">
+                    <span class="{% if account.is_leaf %}font-normal{% else %}font-semibold{% endif %}">
+                        {% if account.is_leaf %}
+                        <a href="{% url 'general_ledger' %}?account={{ account.id }}&start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}" 
+                           class="text-blue-600 hover:text-blue-800 hover:underline">
+                            {{ account.code }} - {{ account.name }}
+                        </a>
+                        {% else %}
+                            {{ account.code }} - {{ account.name }}
+                        {% endif %}
+                    </span>
+                    <span class="{% if account.is_leaf %}font-normal{% else %}font-semibold{% endif %}">
+                        R$ {{ balance|currency }}
+                    </span>
+                </div>
+                {% empty %}
+                <p class="text-gray-500 italic">Nenhuma dedução da receita encontrada.</p>
+                {% endfor %}
+                
+                <div class="flex justify-between items-center mt-4 pt-2 border-t border-gray-300 font-bold">
+                    <span>Total de Deduções</span>
+                    <span class="text-orange-700">R$ {{ total_deductions|currency }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Receita Líquida -->
+        <div>
+            <div class="flex justify-between items-center font-bold text-lg border-t border-gray-300 pt-2">
+                <span>Receita Líquida</span>
+                <span class="text-green-700">R$ {{ net_revenue|currency }}</span>
             </div>
         </div>
         
@@ -71,7 +117,14 @@
                 {% for account, balance in expenses %}
                 <div class="flex justify-between items-center {% if account.level > 1 %}pl-{{ account.level|add:"-1" }}{% endif %}">
                     <span class="{% if account.is_leaf %}font-normal{% else %}font-semibold{% endif %}">
-                        {{ account.code }} - {{ account.name }}
+                        {% if account.is_leaf %}
+                        <a href="{% url 'general_ledger' %}?account={{ account.id }}&start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}" 
+                           class="text-blue-600 hover:text-blue-800 hover:underline">
+                            {{ account.code }} - {{ account.name }}
+                        </a>
+                        {% else %}
+                            {{ account.code }} - {{ account.name }}
+                        {% endif %}
                     </span>
                     <span class="{% if account.is_leaf %}font-normal{% else %}font-semibold{% endif %}">
                         R$ {{ balance|currency }}
@@ -107,4 +160,14 @@
         {% endif %}
     </div>
 </div>
+
+<script>
+    // Adiciona uma dica visual ao passar o mouse sobre as contas com link
+    document.addEventListener('DOMContentLoaded', function() {
+        const accountLinks = document.querySelectorAll('a[href*="general_ledger"]');
+        accountLinks.forEach(link => {
+            link.title = "Clique para ver o Razão desta conta";
+        });
+    });
+</script>
 {% endblock %}

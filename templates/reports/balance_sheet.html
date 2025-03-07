@@ -130,7 +130,11 @@
                             {{ account.code }} - {{ account.name }}
                         </span>
                         <span class="font-semibold">
-                            R$ {{ balance|currency }}
+                            {% if account.code == '3' %}
+                                R$ {{ total_equity|currency }}
+                            {% else %}
+                                R$ {{ balance|currency }}
+                            {% endif %}
                         </span>
                     </div>
                 </div>

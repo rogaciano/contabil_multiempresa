@@ -1,0 +1,18 @@
+code,name,type,parent_code,description,is_active
+1,Ativo,A,,Contas de Ativo,true
+1.1,Ativo Circulante,A,1,Contas de Ativo Circulante,true
+1.1.1,Caixa,A,1.1,Dinheiro em espécie,true
+1.1.2,Bancos Conta Movimento,A,1.1,Contas bancárias de movimento,true
+1.1.3,Aplicações Financeiras,A,1.1,Investimentos de curto prazo,true
+1.1.4,Clientes,A,1.1,Contas a receber de clientes,true
+1.1.5,Estoques,A,1.1,Mercadorias e produtos em estoque,true
+1.1.6,Impostos a Recuperar,A,1.1,Créditos tributários,true
+1.1.7,Adiantamentos,A,1.1,Adiantamentos a fornecedores e funcionários,true
+1.1.8,Despesas Antecipadas,A,1.1,Despesas pagas antecipadamente,true
+1.2,Ativo Não Circulante,A,1,Contas de Ativo Não Circulante,true
+1.2.1,Realizável a Longo Prazo,A,1.2,Ativos que serão realizados após o exercício seguinte,true
+1.2.1.1,Clientes de Longo Prazo,A,1.2.1,Contas a receber de clientes de longo prazo,true
+1.2.1.2,Depósitos Judiciais,A,1.2.1,Depósitos judiciais e recursais,true
+1.2.2,Investimentos,A,1.2,Investimentos permanentes,true
+1.2.2.1,Participações Societárias,A,1.2.2,Participações em outras empresas,true
+1.2.2.2,Outros Investimentos,A,1.2.2,Outros investimentos permanentes,true

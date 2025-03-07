@@ -1,31 +1,20 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
+from accounts.models import Company
+from django.contrib.auth.models import User
+from django.utils import timezone
+import uuid
 
 # Create your models here.
 
-class CompanyInfo(models.Model):
-    name = models.CharField(_('Nome da Empresa'), max_length=100)
-    cnpj = models.CharField(_('CNPJ'), max_length=18, unique=True)
-    address = models.TextField(_('Endereço'))
-    phone = models.CharField(_('Telefone'), max_length=20)
-    email = models.EmailField(_('E-mail'))
-    website = models.URLField(_('Website'), blank=True)
-    logo = models.ImageField(_('Logo'), upload_to='company_logos/', blank=True)
-    
-    class Meta:
-        verbose_name = _('Informações da Empresa')
-        verbose_name_plural = _('Informações da Empresa')
-        
-    def __str__(self):
-        return self.name
-        
-    def save(self, *args, **kwargs):
-        if not self.pk and CompanyInfo.objects.exists():
-            raise ValueError(_('Já existe um registro de informações da empresa.'))
-        return super().save(*args, **kwargs)
-
 class FiscalYear(models.Model):
+    company = models.ForeignKey(
+        Company,
+        verbose_name=_('Empresa'),
+        on_delete=models.CASCADE,
+        related_name='fiscal_years'
+    )
     year = models.PositiveIntegerField(_('Ano'))
     start_date = models.DateField(_('Data Inicial'))
     end_date = models.DateField(_('Data Final'))
@@ -44,6 +33,25 @@ class FiscalYear(models.Model):
         verbose_name = _('Ano Fiscal')
         verbose_name_plural = _('Anos Fiscais')
         ordering = ['-year']
+        unique_together = ['company', 'year']  # Ano fiscal deve ser único por empresa
         
     def __str__(self):
-        return f'Ano Fiscal {self.year}'
+        return f'Ano Fiscal {self.year} - {self.company.name}'
+
+class UserActivationToken(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='activation_token')
+    token = models.UUIDField(default=uuid.uuid4, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    
+    def __str__(self):
+        return f"Token para {self.user.username}"
+    
+    def is_valid(self):
+        return timezone.now() <= self.expires_at
+    
+    def save(self, *args, **kwargs):
+        if not self.expires_at:
+            # Token válido por 7 dias
+            self.expires_at = timezone.now() + timezone.timedelta(days=7)
+        super().save(*args, **kwargs)

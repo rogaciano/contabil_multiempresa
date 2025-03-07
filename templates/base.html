@@ -6,10 +6,29 @@
     <title>{% block title %}Sistema Contábil{% endblock %}</title>
     {% load static %}
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="{% static 'js/balance_indicator.js' %}"></script>
+    <style>
+        .nav-link {
+            display: inline-flex;
+            align-items: center;
+            height: 4rem; /* 64px */
+            padding-left: 0.25rem;
+            padding-right: 0.25rem;
+            border-bottom-width: 2px;
+            border-color: transparent;
+        }
+        .nav-link.active {
+            border-color: #6366f1; /* indigo-500 */
+        }
+        .nav-link:hover {
+            color: #111827; /* gray-900 */
+        }
+    </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body class="bg-gray-50">
@@ -27,23 +46,38 @@
                     
                     <!-- Menu Principal -->
                     <div class="hidden md:ml-6 md:flex md:space-x-8">
-                        <a href="{% url 'dashboard' %}" class="inline-flex items-center px-1 pt-1 text-gray-900 {% if request.resolver_match.url_name == 'dashboard' %}border-b-2 border-indigo-500{% endif %}">
+                        <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %} text-gray-900">
                             Dashboard
                         </a>
-                        <a href="{% url 'account_list' %}" class="inline-flex items-center px-1 pt-1 text-gray-500 hover:text-gray-900 {% if 'account' in request.resolver_match.url_name %}border-b-2 border-indigo-500{% endif %}">
-                            Contas
-                        </a>
-                        <a href="{% url 'transaction_list' %}" class="inline-flex items-center px-1 pt-1 text-gray-500 hover:text-gray-900 {% if 'transaction' in request.resolver_match.url_name %}border-b-2 border-indigo-500{% endif %}">
+                        <div class="relative" x-data="{ open: false }" @click.away="open = false">
+                            <a href="#" @click.prevent="open = !open" class="nav-link {% if 'account' in request.resolver_match.url_name %}active{% endif %} text-gray-500">
+                                Contas
+                                <svg class="ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </a>
+                            <div x-show="open" class="absolute w-48 bg-white shadow-lg py-1 rounded-md top-full" style="display: none;">
+                                <a href="{% url 'account_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Listar Contas</a>
+                                <a href="{% url 'account_create' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Nova Conta</a>
+                                <a href="{% url 'account_chart' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Plano de Contas</a>
+                                <a href="{% url 'ai_account_plan_generator' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <span class="flex items-center">
+                                        <i class="fas fa-robot mr-2"></i> Gerar Plano com IA
+                                    </span>
+                                </a>
+                            </div>
+                        </div>
+                        <a href="{% url 'transaction_list' %}" class="nav-link {% if 'transaction' in request.resolver_match.url_name %}active{% endif %} text-gray-500">
                             Transações
                         </a>
-                        <div class="relative group inline-flex items-center">
-                            <a href="#" class="inline-flex items-center px-1 pt-1 text-gray-500 hover:text-gray-900 {% if 'report' in request.resolver_match.url_name %}border-b-2 border-indigo-500{% endif %}">
+                        <div class="relative" x-data="{ open: false }" @click.away="open = false">
+                            <a href="#" @click.prevent="open = !open" class="nav-link {% if 'report' in request.resolver_match.url_name %}active{% endif %} text-gray-500">
                                 Relatórios
                                 <svg class="ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                                 </svg>
                             </a>
-                            <div class="absolute hidden group-hover:block w-48 bg-white shadow-lg py-1 rounded-md top-full">
+                            <div x-show="open" class="absolute w-48 bg-white shadow-lg py-1 rounded-md top-full" style="display: none;">
                                 <a href="{% url 'balance_sheet' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Balanço Patrimonial</a>
                                 <a href="{% url 'income_statement' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">DRE</a>
                                 <a href="{% url 'cash_flow' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Fluxo de Caixa</a>
@@ -56,20 +90,45 @@
                 
                 <!-- Menu do Usuário -->
                 <div class="hidden md:ml-6 md:flex md:items-center">
+                    {% if user.is_authenticated and user.profile.companies.exists %}
+                    <div class="mr-4">
+                        <form id="company-selector-form" action="{% url 'set_current_company' %}" method="post" class="flex items-center">
+                            {% csrf_token %}
+                            <label for="company-selector" class="sr-only">Selecionar Empresa</label>
+                            <select id="company-selector" name="company_id" class="select2-widget form-select block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" onchange="this.form.submit()">
+                                {% for company in user.profile.companies.all %}
+                                <option value="{{ company.id }}" {% if request.session.current_company_id == company.id %}selected{% endif %}>
+                                    {{ company.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </div>
+                    {% endif %}
+                    
                     {% include 'partials/balance_indicator.html' %}
                     
-                    <div class="ml-3 relative group">
-                        <button class="flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <div class="ml-3 relative" x-data="{ open: false }" @click.away="open = false">
+                        <button @click="open = !open" class="flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                             <span class="sr-only">Abrir menu do usuário</span>
-                            <img class="h-8 w-8 rounded-full" src="{% static 'img/default-avatar.png' %}" alt="">
+                            <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+                                <i class="fas fa-user text-gray-500"></i>
+                            </div>
                         </button>
-                        <div class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 hidden group-hover:block">
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Seu Perfil</a>
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Configurações</a>
+                        <div x-show="open" class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5" style="display: none;">
+                            <a href="{% url 'company_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-building mr-2"></i> Minhas Empresas
+                            </a>
+                            <a href="{% url 'user_profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-user mr-2"></i> Seu Perfil
+                            </a>
+                            <a href="{% url 'user_settings' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-cog mr-2"></i> Configurações
+                            </a>
                             <form method="post" action="{% url 'logout' %}">
                                 {% csrf_token %}
                                 <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    Sair
+                                    <i class="fas fa-sign-out-alt mr-2"></i> Sair
                                 </button>
                             </form>
                         </div>
@@ -91,8 +150,41 @@
         <!-- Menu Mobile (expandido) -->
         <div class="hidden mobile-menu md:hidden" x-data="{ reportsOpen: false }">
             <div class="px-2 pt-2 pb-3 space-y-1">
+                {% if user.is_authenticated and user.profile.companies.exists %}
+                <div class="px-3 py-2">
+                    <label for="mobile-company-selector" class="block text-sm font-medium text-gray-700">Empresa Atual</label>
+                    <form action="{% url 'set_current_company' %}" method="post">
+                        {% csrf_token %}
+                        <select id="mobile-company-selector" name="company_id" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" onchange="this.form.submit()">
+                            {% for company in user.profile.companies.all %}
+                            <option value="{{ company.id }}" {% if request.session.current_company_id == company.id %}selected{% endif %}>
+                                {{ company.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+                {% endif %}
+                
                 <a href="{% url 'dashboard' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Dashboard</a>
-                <a href="{% url 'account_list' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Contas</a>
+                <div>
+                    <button @click="reportsOpen = !reportsOpen" class="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">
+                        Contas
+                        <svg class="ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    <div x-show="reportsOpen" class="pl-4">
+                        <a href="{% url 'account_list' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Listar Contas</a>
+                        <a href="{% url 'account_create' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Nova Conta</a>
+                        <a href="{% url 'account_chart' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Plano de Contas</a>
+                        <a href="{% url 'ai_account_plan_generator' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">
+                            <span class="flex items-center">
+                                <i class="fas fa-robot mr-2"></i> Gerar Plano com IA
+                            </span>
+                        </a>
+                    </div>
+                </div>
                 <a href="{% url 'transaction_list' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Transações</a>
                 <div>
                     <button @click="reportsOpen = !reportsOpen" class="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">
@@ -113,7 +205,9 @@
             <div class="pt-4 pb-3 border-t border-gray-200">
                 <div class="flex items-center px-4">
                     <div class="flex-shrink-0">
-                        <img class="h-10 w-10 rounded-full" src="{% static 'img/default-avatar.png' %}" alt="">
+                        <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                            <i class="fas fa-user text-gray-500"></i>
+                        </div>
                     </div>
                     <div class="ml-3">
                         <div class="text-base font-medium text-gray-800">{{ user.get_full_name }}</div>
@@ -121,12 +215,19 @@
                     </div>
                 </div>
                 <div class="mt-3 space-y-1">
-                    <a href="#" class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">Seu Perfil</a>
-                    <a href="#" class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">Configurações</a>
+                    <a href="{% url 'company_list' %}" class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">
+                        <i class="fas fa-building mr-2"></i> Minhas Empresas
+                    </a>
+                    <a href="{% url 'user_profile' %}" class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">
+                        <i class="fas fa-user mr-2"></i> Seu Perfil
+                    </a>
+                    <a href="{% url 'user_settings' %}" class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">
+                        <i class="fas fa-cog mr-2"></i> Configurações
+                    </a>
                     <form method="post" action="{% url 'logout' %}">
                         {% csrf_token %}
                         <button type="submit" class="block w-full text-left px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">
-                            Sair
+                            <i class="fas fa-sign-out-alt mr-2"></i> Sair
                         </button>
                     </form>
                 </div>
@@ -173,17 +274,19 @@
     </main>
 
     <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
-        // Menu Mobile
-        document.querySelector('.mobile-menu-button').addEventListener('click', function() {
-            document.querySelector('.mobile-menu').classList.toggle('hidden');
-        });
-        
         // Inicializar Select2
         $(document).ready(function() {
-            $('.select2-widget').select2();
+            // Inicializar Select2 para todos os widgets
+            $('.django-select2').select2();
+            
+            // Configurar menu mobile
+            const btn = document.querySelector("button.mobile-menu-button");
+            const menu = document.querySelector(".mobile-menu");
+            
+            btn.addEventListener("click", () => {
+                menu.classList.toggle("hidden");
+            });
         });
     </script>
     {% block extra_js %}{% endblock %}

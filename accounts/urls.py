@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import ai_views
 
 urlpatterns = [
     path('', views.AccountListView.as_view(), name='account_list'),
@@ -11,4 +12,14 @@ urlpatterns = [
     path('import/', views.AccountImportView.as_view(), name='account_import'),
     path('export/', views.AccountExportView.as_view(), name='account_export'),
     path('api/by-type/<str:type_code>/', views.AccountsByTypeView.as_view(), name='accounts_by_type'),
+    path('template-download/', views.AccountTemplateDownloadView.as_view(), name='account_template_download'),
+    
+    # URLs para perfil do usuário e configurações
+    path('profile/', views.UserProfileView.as_view(), name='user_profile'),
+    path('profile/edit/', views.UserProfileUpdateView.as_view(), name='user_profile_edit'),
+    path('settings/', views.UserSettingsView.as_view(), name='user_settings'),
+    
+    # URLs para geração de plano de contas com IA
+    path('ai-generator/', ai_views.AIAccountPlanGeneratorView.as_view(), name='ai_account_plan_generator'),
+    path('ai-result/', ai_views.AIAccountPlanResultView.as_view(), name='ai_account_plan_result'),
 ]

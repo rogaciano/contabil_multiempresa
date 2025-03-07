@@ -10,10 +10,8 @@ from datetime import datetime, timedelta
 from io import BytesIO
 
 from .models import Report
-from accounts.models import Account, AccountType
+from accounts.models import Account, AccountType, Company
 from transactions.models import Transaction
-from core.models import CompanyInfo
-
 from django.template.loader import render_to_string
 from django.http import HttpResponse
 from django.urls import reverse
@@ -29,26 +27,59 @@ class BalanceSheetView(LoginRequiredMixin, TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        end_date = self.request.GET.get('end_date', timezone.now().date())
         
-        # Criar relatório
+        # Obter parâmetros de data
+        start_date_str = self.request.GET.get('start_date')
+        end_date_str = self.request.GET.get('end_date')
+        
+        if start_date_str:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        else:
+            start_date = datetime.now().date().replace(day=1, month=1)
+            
+        if end_date_str:
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        else:
+            end_date = datetime.now().date()
+            
+        # Obter a empresa atual da sessão
+        company_id = self.request.session.get('current_company_id')
+        if not company_id:
+            context['error'] = 'Nenhuma empresa selecionada'
+            return context
+            
+        company = Company.objects.get(id=company_id)
+        
+        # Criar um relatório temporário para usar o mesmo método de cálculo
         report = Report.objects.create(
-            type='BS',
-            start_date=None,  # Balanço não precisa de data inicial
+            type=Report.BALANCE_SHEET,
+            start_date=start_date,
             end_date=end_date,
-            generated_by=self.request.user
+            generated_by=self.request.user,
+            company=company
         )
         
-        # Obter dados do balanço
-        context.update(report.get_balance_sheet_data())
-        context['report'] = report
-        context['end_date'] = end_date
+        # Obter os dados do balanço usando o método do modelo
+        data = report.get_balance_sheet_data()
         
-        # Calcular total de passivos + patrimônio líquido
-        context['total_liabilities_equity'] = context['total_liabilities'] + context['total_equity']
+        # Adicionar dados ao contexto
+        context.update({
+            'assets': data['assets'],
+            'liabilities': data['liabilities'],
+            'equity': data['equity'],
+            'total_assets': data['total_assets'],
+            'total_liabilities': data['total_liabilities'],
+            'total_equity': data['total_equity'],
+            'total_liabilities_equity': data['total_liabilities_equity'],
+            'is_balanced': data['is_balanced'],
+            'difference': abs(data['total_assets'] - data['total_liabilities_equity']),
+            'start_date': start_date,
+            'end_date': end_date,
+            'now': datetime.now(),
+        })
         
-        # Calcular diferença entre ativos e passivos + patrimônio líquido
-        context['difference'] = abs(context['total_assets'] - context['total_liabilities_equity'])
+        # Excluir o relatório temporário
+        report.delete()
         
         return context
 
@@ -68,12 +99,21 @@ class IncomeStatementView(LoginRequiredMixin, TemplateView):
         if not end_date:
             end_date = timezone.now().date()
         
+        # Obter a empresa atual da sessão
+        company_id = self.request.session.get('current_company_id')
+        if not company_id:
+            context['error'] = 'Nenhuma empresa selecionada'
+            return context
+            
+        company = Company.objects.get(id=company_id)
+        
         # Criar relatório
         report = Report.objects.create(
             type='IS',
             start_date=start_date,
             end_date=end_date,
-            generated_by=self.request.user
+            generated_by=self.request.user,
+            company=company
         )
         
         # Obter dados do DRE
@@ -101,12 +141,21 @@ class CashFlowView(LoginRequiredMixin, TemplateView):
         if not end_date:
             end_date = timezone.now().date()
         
+        # Obter a empresa atual da sessão
+        company_id = self.request.session.get('current_company_id')
+        if not company_id:
+            context['error'] = 'Nenhuma empresa selecionada'
+            return context
+            
+        company = Company.objects.get(id=company_id)
+        
         # Criar relatório
         report = Report.objects.create(
             type='CF',
             start_date=start_date,
             end_date=end_date,
-            generated_by=self.request.user
+            generated_by=self.request.user,
+            company=company
         )
         
         # Obter dados do fluxo de caixa
@@ -125,7 +174,24 @@ class TrialBalanceView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         end_date = self.request.GET.get('end_date', timezone.now().date())
         
-        accounts = Account.objects.filter(is_active=True).order_by('code')
+        # Obter a empresa atual da sessão
+        company_id = self.request.session.get('current_company_id')
+        if not company_id:
+            context['error'] = 'Nenhuma empresa selecionada'
+            return context
+            
+        company = Company.objects.get(id=company_id)
+        
+        # Criar relatório
+        report = Report.objects.create(
+            type='TB',
+            start_date=None,
+            end_date=end_date,
+            generated_by=self.request.user,
+            company=company
+        )
+        
+        accounts = Account.objects.filter(company=company, is_active=True).order_by('code')
         trial_balance = []
         total_debit = total_credit = 0
         
@@ -223,7 +289,24 @@ class GeneralLedgerView(LoginRequiredMixin, TemplateView):
                 'final_balance': running_balance
             })
         
-        context['accounts'] = Account.objects.filter(is_active=True)
+        # Obter a empresa atual da sessão
+        company_id = self.request.session.get('current_company_id')
+        if not company_id:
+            context['error'] = 'Nenhuma empresa selecionada'
+            return context
+            
+        company = Company.objects.get(id=company_id)
+        
+        # Criar relatório
+        report = Report.objects.create(
+            type='GL',
+            start_date=start_date if start_date else timezone.now().date(),
+            end_date=end_date if end_date else timezone.now().date(),
+            generated_by=self.request.user,
+            company=company
+        )
+        
+        context['accounts'] = Account.objects.filter(company=company, is_active=True)
         context['start_date'] = start_date_str
         context['end_date'] = end_date_str
         context['now'] = timezone.now()
@@ -236,27 +319,70 @@ class BalanceStatusView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         import json
         from django.http import JsonResponse
+        import logging
+        from django.db.models import Sum, Q
+        from transactions.models import Transaction
         
-        # Criar relatório temporário para obter os dados do balanço
-        report = Report.objects.create(
-            type='BS',
-            end_date=timezone.now().date(),
-            generated_by=request.user
-        )
+        logger = logging.getLogger(__name__)
         
-        # Obter dados do balanço
-        balance_data = report.get_balance_sheet_data()
+        # Obter a empresa atual da sessão
+        company_id = request.session.get('current_company_id')
+        if not company_id:
+            return JsonResponse({
+                'error': 'Nenhuma empresa selecionada',
+                'total_assets': 0,
+                'total_liabilities_equity': 0,
+                'is_balanced': True,
+                'difference': 0
+            })
+            
+        company = Company.objects.get(id=company_id)
+        logger.info(f"Calculando balanço para empresa: {company.name} (ID: {company.id})")
         
-        # Excluir o relatório temporário (não precisamos salvá-lo)
-        report.delete()
+        # Obter todas as contas da empresa
+        asset_accounts = Account.objects.filter(company=company, type=AccountType.ASSET, is_active=True)
+        liability_accounts = Account.objects.filter(company=company, type=AccountType.LIABILITY, is_active=True)
+        equity_accounts = Account.objects.filter(company=company, type=AccountType.EQUITY, is_active=True)
+        revenue_accounts = Account.objects.filter(company=company, type=AccountType.REVENUE, is_active=True)
+        expense_accounts = Account.objects.filter(company=company, type=AccountType.EXPENSE, is_active=True)
+        
+        # Filtrar apenas contas folha para evitar duplicação
+        leaf_asset_accounts = [account for account in asset_accounts if account.is_leaf]
+        leaf_liability_accounts = [account for account in liability_accounts if account.is_leaf]
+        leaf_equity_accounts = [account for account in equity_accounts if account.is_leaf]
+        leaf_revenue_accounts = [account for account in revenue_accounts if account.is_leaf]
+        leaf_expense_accounts = [account for account in expense_accounts if account.is_leaf]
+        
+        # Calcular totais
+        total_assets = sum(account.get_balance() for account in leaf_asset_accounts)
+        total_liabilities = sum(account.get_balance() for account in leaf_liability_accounts)
+        total_equity = sum(account.get_balance() for account in leaf_equity_accounts)
+        total_revenue = sum(account.get_balance() for account in leaf_revenue_accounts)
+        total_expense = sum(account.get_balance() for account in leaf_expense_accounts)
+        
+        # Adicionar o resultado do período ao patrimônio líquido
+        net_income = total_revenue - total_expense
+        total_equity += net_income
+        
+        total_liabilities_equity = total_liabilities + total_equity
+        
+        logger.info(f"Total de ativos (apenas folhas): {total_assets}")
+        logger.info(f"Contas de ativo folha: {', '.join([f'{a.code} - {a.name} ({a.get_balance()})' for a in leaf_asset_accounts])}")
+        logger.info(f"Total de passivos (apenas folhas): {total_liabilities}")
+        logger.info(f"Total de patrimônio líquido (apenas folhas): {total_equity}")
+        logger.info(f"Total de receitas (apenas folhas): {total_revenue}")
+        logger.info(f"Total de despesas (apenas folhas): {total_expense}")
+        logger.info(f"Resultado do período: {net_income}")
         
         # Preparar resposta
         response_data = {
-            'total_assets': balance_data['total_assets'],
-            'total_liabilities_equity': balance_data['total_liabilities'] + balance_data['total_equity'],
-            'is_balanced': abs(balance_data['total_assets'] - (balance_data['total_liabilities'] + balance_data['total_equity'])) < 0.01,
-            'difference': abs(balance_data['total_assets'] - (balance_data['total_liabilities'] + balance_data['total_equity']))
+            'total_assets': total_assets,
+            'total_liabilities_equity': total_liabilities_equity,
+            'is_balanced': abs(total_assets - total_liabilities_equity) < 0.01,
+            'difference': abs(total_assets - total_liabilities_equity)
         }
+        
+        logger.info(f"Resposta: {response_data}")
         
         return JsonResponse(response_data)
 
@@ -266,23 +392,30 @@ class ReportExportView(LoginRequiredMixin, View):
         start_date = request.GET.get('start_date')
         end_date = request.GET.get('end_date')
         
+        # Obter a empresa atual da sessão
+        company_id = request.session.get('current_company_id')
+        if not company_id:
+            return HttpResponse('Selecione uma empresa antes de exportar relatórios.', status=400)
+            
+        company = Company.objects.get(id=company_id)
+        
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = f'attachment; filename="{report_type}_{end_date}.csv"'
         
         writer = csv.writer(response)
         
         if report_type == 'BS':
-            self._export_balance_sheet(writer, end_date)
+            self._export_balance_sheet(writer, end_date, company)
         elif report_type == 'IS':
-            self._export_income_statement(writer, start_date, end_date)
+            self._export_income_statement(writer, start_date, end_date, company)
         elif report_type == 'CF':
-            self._export_cash_flow(writer, start_date, end_date)
+            self._export_cash_flow(writer, start_date, end_date, company)
         elif report_type == 'TB':
-            self._export_trial_balance(writer, end_date)
+            self._export_trial_balance(writer, end_date, company)
         
         return response
     
-    def _export_balance_sheet(self, writer, end_date):
+    def _export_balance_sheet(self, writer, end_date, company):
         try:
             # Configurar o locale para o padrão brasileiro
             locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
@@ -293,88 +426,138 @@ class ReportExportView(LoginRequiredMixin, View):
             except:
                 pass
                 
+        # Criar um relatório temporário para usar o mesmo método de cálculo
+        report = Report.objects.create(
+            type='BS',
+            end_date=end_date,
+            generated_by=self.request.user,
+            company=company
+        )
+        
+        # Obter os dados do balanço usando o mesmo método que a visualização
+        data = report.get_balance_sheet_data()
+        
+        # Adicionar logs para depuração
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"Exportando balanço patrimonial para CSV - Empresa: {company.name}")
+        logger.info(f"Total de ativos: {data['total_assets']}")
+        logger.info(f"Total de passivos: {data['total_liabilities']}")
+        logger.info(f"Total de patrimônio líquido: {data['total_equity']}")
+        logger.info(f"Total de passivos + patrimônio líquido: {data['total_liabilities_equity']}")
+        
         writer.writerow(['Balanço Patrimonial', end_date])
         writer.writerow([])
         
         # Ativos
         writer.writerow(['Ativos'])
-        assets = Account.objects.filter(type=AccountType.ASSET, is_active=True)
-        total_assets = 0
-        for account in assets:
-            balance = account.get_balance(end_date=end_date)
+        for account, balance in data['assets']:
             formatted_balance = locale.format_string('%.2f', balance, grouping=True)
             writer.writerow([account.code, account.name, formatted_balance])
-            total_assets += balance
-        writer.writerow(['Total Ativos', '', locale.format_string('%.2f', total_assets, grouping=True)])
+        writer.writerow(['Total Ativos', '', locale.format_string('%.2f', data['total_assets'], grouping=True)])
         writer.writerow([])
         
         # Passivos
         writer.writerow(['Passivos'])
-        liabilities = Account.objects.filter(type=AccountType.LIABILITY, is_active=True)
-        total_liabilities = 0
-        for account in liabilities:
-            balance = account.get_balance(end_date=end_date)
+        for account, balance in data['liabilities']:
             formatted_balance = locale.format_string('%.2f', balance, grouping=True)
             writer.writerow([account.code, account.name, formatted_balance])
-            total_liabilities += balance
-        writer.writerow(['Total Passivos', '', locale.format_string('%.2f', total_liabilities, grouping=True)])
+        writer.writerow(['Total Passivos', '', locale.format_string('%.2f', data['total_liabilities'], grouping=True)])
         writer.writerow([])
         
         # Patrimônio Líquido
         writer.writerow(['Patrimônio Líquido'])
-        equity = Account.objects.filter(type=AccountType.EQUITY, is_active=True)
-        total_equity = 0
-        for account in equity:
-            balance = account.get_balance(end_date=end_date)
+        
+        # Usar os dados do modelo para garantir consistência
+        equity_total = data['total_equity']
+        
+        for account, balance in data['equity']:
             formatted_balance = locale.format_string('%.2f', balance, grouping=True)
             writer.writerow([account.code, account.name, formatted_balance])
-            total_equity += balance
-        writer.writerow(['Total Patrimônio Líquido', '', locale.format_string('%.2f', total_equity, grouping=True)])
+        
+        # Garantir que o total do patrimônio líquido seja calculado corretamente
+        # Usar o valor calculado no modelo
+        writer.writerow(['Total Patrimônio Líquido', '', locale.format_string('%.2f', equity_total, grouping=True)])
         
         # Total Passivo + PL
-        total_liabilities_equity = total_liabilities + total_equity
+        total_liabilities_equity = data['total_liabilities_equity']
         writer.writerow(['Total Passivo + Patrimônio Líquido', '', locale.format_string('%.2f', total_liabilities_equity, grouping=True)])
         
         # Verificar se o balanço está equilibrado
-        difference = total_assets - total_liabilities_equity
-        if abs(difference) > 0.01:  # Tolerância para erros de arredondamento
+        difference = data['total_assets'] - total_liabilities_equity
+        if abs(difference) > 0.01:
             writer.writerow([])
-            writer.writerow(['ATENÇÃO: Balanço não equilibrado. Diferença:', '', locale.format_string('%.2f', difference, grouping=True)])
+            writer.writerow(['ATENÇÃO: Balanço não equilibrado. Diferença:', '', locale.format_string('%.2f', abs(difference), grouping=True)])
+        
+        # Excluir o relatório temporário
+        report.delete()
     
-    def _export_income_statement(self, writer, start_date, end_date):
+    def _export_income_statement(self, writer, start_date, end_date, company):
+        try:
+            # Configurar o locale para o padrão brasileiro
+            locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
+        except:
+            try:
+                # Fallback para Windows
+                locale.setlocale(locale.LC_ALL, 'Portuguese_Brazil.1252')
+            except:
+                pass
+                
+        # Criar um relatório temporário para usar o mesmo método de cálculo
+        report = Report.objects.create(
+            type='IS',
+            start_date=start_date,
+            end_date=end_date,
+            generated_by=self.request.user,
+            company=company
+        )
+        
+        # Obter os dados da DRE usando o mesmo método que a visualização
+        data = report.get_income_statement_data()
+        
         writer.writerow(['Demonstração do Resultado', f'{start_date} a {end_date}'])
         writer.writerow([])
         
-        # Receitas
-        writer.writerow(['Receitas'])
-        revenues = Account.objects.filter(type=AccountType.REVENUE, is_active=True)
-        total_revenue = 0
-        for account in revenues:
-            balance = account.get_balance(start_date=start_date, end_date=end_date)
-            writer.writerow([account.code, account.name, balance])
-            total_revenue += balance
-        writer.writerow(['Total Receitas', '', total_revenue])
+        # Receitas Brutas
+        writer.writerow(['Receitas Brutas'])
+        for account, balance in data['revenues']:
+            formatted_balance = locale.format_string('%.2f', balance, grouping=True)
+            writer.writerow([account.code, account.name, formatted_balance])
+        writer.writerow(['Total Receitas Brutas', '', locale.format_string('%.2f', data['total_revenue'], grouping=True)])
+        writer.writerow([])
+        
+        # Deduções da Receita
+        writer.writerow(['Deduções da Receita'])
+        for account, balance in data['deductions']:
+            formatted_balance = locale.format_string('%.2f', balance, grouping=True)
+            writer.writerow([account.code, account.name, formatted_balance])
+        writer.writerow(['Total Deduções', '', locale.format_string('%.2f', data['total_deductions'], grouping=True)])
+        writer.writerow([])
+        
+        # Receita Líquida
+        writer.writerow(['Receita Líquida', '', locale.format_string('%.2f', data['net_revenue'], grouping=True)])
         writer.writerow([])
         
         # Despesas
         writer.writerow(['Despesas'])
-        expenses = Account.objects.filter(type=AccountType.EXPENSE, is_active=True)
-        total_expenses = 0
-        for account in expenses:
-            balance = account.get_balance(start_date=start_date, end_date=end_date)
-            writer.writerow([account.code, account.name, balance])
-            total_expenses += balance
-        writer.writerow(['Total Despesas', '', total_expenses])
+        for account, balance in data['expenses']:
+            formatted_balance = locale.format_string('%.2f', balance, grouping=True)
+            writer.writerow([account.code, account.name, formatted_balance])
+        writer.writerow(['Total Despesas', '', locale.format_string('%.2f', data['total_expenses'], grouping=True)])
         writer.writerow([])
         
         # Resultado
-        writer.writerow(['Resultado do Período', '', total_revenue - total_expenses])
+        writer.writerow(['Resultado do Período', '', locale.format_string('%.2f', data['net_income'], grouping=True)])
+        
+        # Excluir o relatório temporário
+        report.delete()
     
-    def _export_cash_flow(self, writer, start_date, end_date):
+    def _export_cash_flow(self, writer, start_date, end_date, company):
         writer.writerow(['Fluxo de Caixa', f'{start_date} a {end_date}'])
         writer.writerow([])
         
         cash_accounts = Account.objects.filter(
+            company=company,
             type=AccountType.ASSET,
             is_active=True,
             code__startswith='1.1.1'
@@ -419,12 +602,12 @@ class ReportExportView(LoginRequiredMixin, View):
         writer.writerow([])
         writer.writerow(['Saldo Final', '', final_balance])
     
-    def _export_trial_balance(self, writer, end_date):
+    def _export_trial_balance(self, writer, end_date, company):
         writer.writerow(['Balancete', end_date])
         writer.writerow([])
         writer.writerow(['Código', 'Conta', 'Débito', 'Crédito'])
         
-        accounts = Account.objects.filter(is_active=True).order_by('code')
+        accounts = Account.objects.filter(company=company, is_active=True).order_by('code')
         total_debit = total_credit = 0
         
         for account in accounts:
@@ -460,18 +643,26 @@ class ReportPDFView(LoginRequiredMixin, View):
         if start_date:
             start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
         else:
-            start_date = timezone.now().replace(day=1).date()
+            start_date = timezone.now().replace(day=1, month=1).date()
             
         if end_date:
             end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
         else:
             end_date = timezone.now().date()
         
+        # Obter a empresa atual da sessão
+        company_id = request.session.get('current_company_id')
+        if not company_id:
+            return HttpResponse('Erro: Nenhuma empresa selecionada', status=400)
+            
+        company = Company.objects.get(id=company_id)
+        
         # Obter o relatório mais recente ou criar um novo
         report = Report.objects.filter(
             type=report_type,
             start_date=start_date,
-            end_date=end_date
+            end_date=end_date,
+            company=company
         ).order_by('-generated_at').first()
         
         if not report:
@@ -481,6 +672,7 @@ class ReportPDFView(LoginRequiredMixin, View):
                 start_date=start_date,
                 end_date=end_date,
                 generated_by=request.user,
+                company=company,
                 notes=f'Relatório gerado em {timezone.now().strftime("%d/%m/%Y %H:%M:%S")}'
             )
         
@@ -536,7 +728,7 @@ class ReportPDFView(LoginRequiredMixin, View):
             'end_date': end_date,
             'now': timezone.now(),
             'title': title,
-            'company': CompanyInfo.objects.first()
+            'company': Company.objects.first()
         })
         
         # Renderizar o HTML

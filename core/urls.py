@@ -6,8 +6,18 @@ urlpatterns = [
     path('', views.DashboardView.as_view(), name='dashboard'),
     path('login/', LoginView.as_view(template_name='core/login.html'), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
-    path('company/', views.CompanyInfoView.as_view(), name='company_info'),
-    path('company/edit/', views.CompanyInfoUpdateView.as_view(), name='company_info_edit'),
+    path('register/', views.UserRegistrationView.as_view(), name='register'),
+    path('register/done/', views.RegistrationDoneView.as_view(), name='registration_done'),
+    path('activate/<uuid:token>/', views.activate_account, name='activate_account'),
+    
+    # URLs para empresas
+    path('companies/', views.CompanyListView.as_view(), name='company_list'),
+    path('companies/add/', views.CompanyCreateView.as_view(), name='company_create'),
+    path('companies/<int:pk>/', views.CompanyDetailView.as_view(), name='company_detail'),
+    path('companies/<int:pk>/edit/', views.CompanyUpdateView.as_view(), name='company_update'),
+    path('set-current-company/', views.set_current_company, name='set_current_company'),
+    
+    # URLs para anos fiscais
     path('fiscal-year/', views.FiscalYearListView.as_view(), name='fiscal_year_list'),
     path('fiscal-year/create/', views.FiscalYearCreateView.as_view(), name='fiscal_year_create'),
     path('fiscal-year/<int:pk>/', views.FiscalYearDetailView.as_view(), name='fiscal_year_detail'),

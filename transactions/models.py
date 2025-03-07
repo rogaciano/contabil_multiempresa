@@ -2,9 +2,15 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
-from accounts.models import Account
+from accounts.models import Account, Company
 
 class Transaction(models.Model):
+    company = models.ForeignKey(
+        Company,
+        verbose_name=_('Empresa'),
+        on_delete=models.CASCADE,
+        related_name='transactions'
+    )
     date = models.DateField(_('Data'))
     description = models.CharField(_('Descrição'), max_length=200)
     debit_account = models.ForeignKey(
@@ -44,16 +50,24 @@ class Transaction(models.Model):
             raise ValidationError({
                 'credit_account': _('A conta de crédito deve ser diferente da conta de débito.')
             })
+        
+        # Verificar se as contas pertencem à mesma empresa
+        if self.debit_account and self.credit_account and self.debit_account.company != self.credit_account.company:
+            raise ValidationError(_('As contas de débito e crédito devem pertencer à mesma empresa.'))
             
         if self.amount <= 0:
             raise ValidationError({
                 'amount': _('O valor da transação deve ser maior que zero.')
             })
-    
+            
     def get_absolute_url(self):
         from django.urls import reverse
         return reverse('transaction_detail', kwargs={'pk': self.pk})
         
     def save(self, *args, **kwargs):
+        # Se a empresa não estiver definida, usar a empresa da conta de débito
+        if not self.company_id and self.debit_account_id:
+            self.company = self.debit_account.company
+        
         self.full_clean()
         super().save(*args, **kwargs)
