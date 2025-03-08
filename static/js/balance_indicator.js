@@ -1,10 +1,21 @@
 // Script para atualizar o indicador de equilíbrio do balanço
 document.addEventListener('DOMContentLoaded', function() {
+    // Verificar se o script já foi inicializado para evitar duplicação
+    if (window.balanceIndicatorInitialized) {
+        return;
+    }
+    window.balanceIndicatorInitialized = true;
+    
     // Elementos do indicador
     const balanceIndicator = document.getElementById('balance-indicator');
     const totalAssetsElement = document.getElementById('total-assets');
     const totalLiabilitiesEquityElement = document.getElementById('total-liabilities-equity');
     const balanceStatusElement = document.getElementById('balance-status');
+    
+    // Se os elementos não existirem, não continue
+    if (!balanceIndicator || !totalAssetsElement || !totalLiabilitiesEquityElement || !balanceStatusElement) {
+        return;
+    }
     
     // Função para formatar valores monetários
     function formatCurrency(value) {
@@ -14,8 +25,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }).format(value);
     }
     
+    // Variável para controlar o tempo da última atualização
+    let lastUpdateTime = 0;
+    
     // Função para atualizar o indicador
     function updateBalanceIndicator() {
+        // Evitar atualizações muito frequentes (no mínimo 30 segundos entre atualizações)
+        const now = Date.now();
+        if (now - lastUpdateTime < 30000) {
+            return;
+        }
+        lastUpdateTime = now;
+        
         fetch('/reports/balance-status/')
             .then(response => response.json())
             .then(data => {
@@ -47,8 +68,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Atualizar inicialmente e a cada 5 minutos
-    if (balanceIndicator) {
-        updateBalanceIndicator();
-        setInterval(updateBalanceIndicator, 5 * 60 * 1000);
-    }
+    updateBalanceIndicator();
+    setInterval(updateBalanceIndicator, 5 * 60 * 1000);
 });

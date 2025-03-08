@@ -1,13 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import TemplateView, ListView, DetailView, CreateView, UpdateView, FormView
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, FormView, TemplateView
 from django.urls import reverse_lazy, reverse
-from django.utils.translation import gettext_lazy as _
 from django.contrib import messages
-from django.db import transaction
 from django.db.models import Sum, Count, Q
 from django.http import HttpResponseRedirect
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.core.mail import send_mail
@@ -168,6 +166,38 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 date__range=(fiscal_year.start_date, fiscal_year.end_date)
             ).order_by('-date', '-id')[:10]
             
+            # Calcular estatísticas para o ano fiscal atual
+            # Total de transações no ano fiscal
+            fiscal_year_transactions_count = Transaction.objects.filter(
+                company=company.id,
+                date__range=(fiscal_year.start_date, fiscal_year.end_date)
+            ).count()
+            
+            # Identificar contas de receita e despesa
+            revenue_accounts = Account.objects.filter(
+                company=company.id, 
+                type='R'  # Receitas
+            ).values_list('id', flat=True)
+            
+            expense_accounts = Account.objects.filter(
+                company=company.id, 
+                type='X'  # Despesas
+            ).values_list('id', flat=True)
+            
+            # Calcular total de receitas (créditos em contas de receita)
+            total_revenue = Transaction.objects.filter(
+                company=company.id,
+                date__range=(fiscal_year.start_date, fiscal_year.end_date),
+                credit_account_id__in=revenue_accounts
+            ).aggregate(total=Sum('amount'))['total'] or 0
+            
+            # Calcular total de despesas (débitos em contas de despesa)
+            total_expenses = Transaction.objects.filter(
+                company=company.id,
+                date__range=(fiscal_year.start_date, fiscal_year.end_date),
+                debit_account_id__in=expense_accounts
+            ).aggregate(total=Sum('amount'))['total'] or 0
+            
             # Adicionar ao contexto
             context.update({
                 'current_company': company,  # Garantir que o nome da variável seja consistente
@@ -175,6 +205,9 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 'total_accounts': total_accounts,
                 'total_transactions': total_transactions,
                 'recent_transactions': recent_transactions,
+                'fiscal_year_transactions_count': fiscal_year_transactions_count,
+                'total_revenue': total_revenue,
+                'total_expenses': total_expenses,
             })
         else:
             messages.info(self.request, _('Por favor, crie um ano fiscal para começar.'))
@@ -291,7 +324,48 @@ class FiscalYearListView(LoginRequiredMixin, ListView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['company'] = getattr(self.request, 'current_company', None)
+        company = getattr(self.request, 'current_company', None)
+        context['company'] = company
+        
+        # Adicionar estatísticas financeiras para cada ano fiscal
+        fiscal_years_with_stats = []
+        for fiscal_year in context['fiscal_years']:
+            # Identificar contas de receita e despesa
+            revenue_accounts = Account.objects.filter(
+                company=company, 
+                type='R'  # Receitas
+            ).values_list('id', flat=True)
+            
+            expense_accounts = Account.objects.filter(
+                company=company, 
+                type='X'  # Despesas
+            ).values_list('id', flat=True)
+            
+            # Calcular total de receitas (créditos em contas de receita)
+            total_revenue = Transaction.objects.filter(
+                company=company,
+                date__range=(fiscal_year.start_date, fiscal_year.end_date),
+                credit_account_id__in=revenue_accounts
+            ).aggregate(total=Sum('amount'))['total'] or 0
+            
+            # Calcular total de despesas (débitos em contas de despesa)
+            total_expenses = Transaction.objects.filter(
+                company=company,
+                date__range=(fiscal_year.start_date, fiscal_year.end_date),
+                debit_account_id__in=expense_accounts
+            ).aggregate(total=Sum('amount'))['total'] or 0
+            
+            # Calcular o resultado (receitas - despesas)
+            result = total_revenue - total_expenses
+            
+            fiscal_years_with_stats.append({
+                'fiscal_year': fiscal_year,
+                'total_revenue': total_revenue,
+                'total_expenses': total_expenses,
+                'result': result
+            })
+        
+        context['fiscal_years_with_stats'] = fiscal_years_with_stats
         return context
 
 
@@ -372,9 +446,45 @@ class FiscalYearDetailView(LoginRequiredMixin, DetailView):
         transactions = Transaction.objects.filter(
             company=fiscal_year.company,
             date__range=(fiscal_year.start_date, fiscal_year.end_date)
-        ).order_by('-date', '-id')[:10]
+        )
         
-        context['transactions'] = transactions
+        # Contar total de transações
+        transactions_count = transactions.count()
+        context['transactions_count'] = transactions_count
+        
+        # Identificar contas de receita e despesa
+        revenue_accounts = Account.objects.filter(
+            company=fiscal_year.company, 
+            type='R'  # Receitas
+        ).values_list('id', flat=True)
+        
+        expense_accounts = Account.objects.filter(
+            company=fiscal_year.company, 
+            type='X'  # Despesas
+        ).values_list('id', flat=True)
+        
+        # Calcular total de receitas (créditos em contas de receita)
+        total_revenue = Transaction.objects.filter(
+            company=fiscal_year.company,
+            date__range=(fiscal_year.start_date, fiscal_year.end_date),
+            credit_account_id__in=revenue_accounts
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        
+        # Calcular total de despesas (débitos em contas de despesa)
+        total_expenses = Transaction.objects.filter(
+            company=fiscal_year.company,
+            date__range=(fiscal_year.start_date, fiscal_year.end_date),
+            debit_account_id__in=expense_accounts
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        
+        # Calcular o resultado (receitas - despesas)
+        result = total_revenue - total_expenses
+        
+        context['total_revenue'] = total_revenue
+        context['total_expenses'] = total_expenses
+        context['result'] = result
+        context['transactions'] = transactions.order_by('-date', '-id')[:10]
+        
         return context
 
 
