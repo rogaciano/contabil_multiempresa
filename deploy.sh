@@ -68,36 +68,80 @@ if [ -f "$APP_DIR/debug.log" ]; then
     chmod 664 $APP_DIR/debug.log
 fi
 
-# 8. Verificar e alinhar configuração do socket
-echo "8. Verificando e alinhando configuração do socket..."
+# 8. Verificar e alinhar configuração da conexão
+echo "8. Verificando e alinhando configuração da conexão..."
 if [ -f "/etc/nginx/sites-available/contabil" ] && [ -f "/etc/supervisor/conf.d/contabil.conf" ]; then
-    NGINX_SOCKET=$(grep -o "unix:[^;]*" /etc/nginx/sites-available/contabil | head -1)
-    SUPERVISOR_SOCKET=$(grep -o "unix:[^ ]*" /etc/supervisor/conf.d/contabil.conf | head -1)
-    
-    echo "   Socket no Nginx: $NGINX_SOCKET"
-    echo "   Socket no Supervisor: $SUPERVISOR_SOCKET"
-    
-    if [ "$NGINX_SOCKET" != "$SUPERVISOR_SOCKET" ]; then
-        echo "   AVISO: Os sockets configurados no Nginx e no Supervisor são diferentes!"
-        echo "   Alinhando as configurações..."
+    # Verificar se estamos usando socket Unix ou TCP
+    if grep -q "unix:" /etc/nginx/sites-available/contabil; then
+        echo "   Detectada configuração de socket Unix no Nginx"
+        NGINX_SOCKET=$(grep -o "unix:[^;]*" /etc/nginx/sites-available/contabil | head -1)
         
-        # Extrair apenas o caminho do socket do Nginx (remover 'unix:')
-        SOCKET_PATH=$(echo $NGINX_SOCKET | sed 's|unix:||')
-        
-        # Atualizar a configuração do Supervisor para usar o mesmo socket que o Nginx
-        sed -i "s|--bind unix:[^ ]*|--bind $NGINX_SOCKET|" /etc/supervisor/conf.d/contabil.conf
-        echo "   Configuração do Supervisor atualizada para usar o socket: $NGINX_SOCKET"
+        # Verificar se o Supervisor também está usando socket
+        if grep -q "unix:" /etc/supervisor/conf.d/contabil.conf; then
+            SUPERVISOR_SOCKET=$(grep -o "unix:[^ ]*" /etc/supervisor/conf.d/contabil.conf | head -1)
+            
+            echo "   Socket no Nginx: $NGINX_SOCKET"
+            echo "   Socket no Supervisor: $SUPERVISOR_SOCKET"
+            
+            if [ "$NGINX_SOCKET" != "$SUPERVISOR_SOCKET" ]; then
+                echo "   AVISO: Os sockets configurados no Nginx e no Supervisor são diferentes!"
+                echo "   Alinhando as configurações..."
+                
+                # Extrair apenas o caminho do socket do Nginx (remover 'unix:')
+                SOCKET_PATH=$(echo $NGINX_SOCKET | sed 's|unix:||')
+                
+                # Atualizar a configuração do Supervisor para usar o mesmo socket que o Nginx
+                sed -i "s|--bind unix:[^ ]*|--bind $NGINX_SOCKET|" /etc/supervisor/conf.d/contabil.conf
+                echo "   Configuração do Supervisor atualizada para usar o socket: $NGINX_SOCKET"
+            else
+                echo "   Configuração de socket OK."
+            fi
+            
+            # Garantir que o diretório do socket existe e tem permissões corretas
+            SOCKET_DIR=$(echo $NGINX_SOCKET | sed 's|unix:||' | xargs dirname)
+            if [ -n "$SOCKET_DIR" ] && [ "$SOCKET_DIR" != "." ]; then
+                echo "   Garantindo permissões para o diretório do socket: $SOCKET_DIR"
+                mkdir -p $SOCKET_DIR
+                chown www-data:www-data $SOCKET_DIR
+                chmod 775 $SOCKET_DIR
+            fi
+        else
+            echo "   AVISO: Nginx está configurado para socket Unix, mas Supervisor não!"
+            echo "   Recomendado alinhar as configurações manualmente."
+        fi
     else
-        echo "   Configuração de socket OK."
-    fi
-    
-    # Garantir que o diretório do socket existe e tem permissões corretas
-    SOCKET_DIR=$(echo $NGINX_SOCKET | sed 's|unix:||' | xargs dirname)
-    if [ -n "$SOCKET_DIR" ] && [ "$SOCKET_DIR" != "." ]; then
-        echo "   Garantindo permissões para o diretório do socket: $SOCKET_DIR"
-        mkdir -p $SOCKET_DIR
-        chown www-data:www-data $SOCKET_DIR
-        chmod 775 $SOCKET_DIR
+        # Verificar configuração TCP
+        NGINX_TCP=$(grep -o "proxy_pass http://[^;]*" /etc/nginx/sites-available/contabil | sed 's|proxy_pass ||' | head -1)
+        
+        if [ -n "$NGINX_TCP" ]; then
+            echo "   Detectada configuração TCP no Nginx: $NGINX_TCP"
+            
+            # Verificar se o Supervisor também está usando TCP
+            if grep -q -- "--bind 127.0.0.1:" /etc/supervisor/conf.d/contabil.conf; then
+                SUPERVISOR_TCP=$(grep -o -- "--bind 127.0.0.1:[0-9]*" /etc/supervisor/conf.d/contabil.conf | head -1)
+                SUPERVISOR_PORT=$(echo $SUPERVISOR_TCP | grep -o "[0-9]*$")
+                NGINX_PORT=$(echo $NGINX_TCP | grep -o ":[0-9]*" | grep -o "[0-9]*")
+                
+                echo "   Porta no Nginx: $NGINX_PORT"
+                echo "   Porta no Supervisor: $SUPERVISOR_PORT"
+                
+                if [ "$NGINX_PORT" != "$SUPERVISOR_PORT" ]; then
+                    echo "   AVISO: As portas configuradas no Nginx e no Supervisor são diferentes!"
+                    echo "   Alinhando as configurações..."
+                    
+                    # Atualizar a configuração do Supervisor para usar a mesma porta que o Nginx
+                    sed -i "s|--bind 127.0.0.1:[0-9]*|--bind 127.0.0.1:$NGINX_PORT|" /etc/supervisor/conf.d/contabil.conf
+                    echo "   Configuração do Supervisor atualizada para usar a porta: $NGINX_PORT"
+                else
+                    echo "   Configuração TCP OK."
+                fi
+            else
+                echo "   AVISO: Nginx está configurado para TCP, mas Supervisor não!"
+                echo "   Recomendado alinhar as configurações manualmente."
+            fi
+        else
+            echo "   AVISO: Não foi possível detectar a configuração de conexão no Nginx!"
+        fi
     fi
 fi
 
@@ -133,14 +177,29 @@ supervisorctl status contabil
 echo "   Status do Nginx:"
 systemctl status nginx --no-pager | head -5
 
-# 11. Verificar se o socket foi criado
-echo "11. Verificando se o socket foi criado..."
-SOCKET_PATH=$(echo $NGINX_SOCKET | sed 's|unix:||')
-if [ -S "$SOCKET_PATH" ]; then
-    echo "   Socket criado com sucesso: $SOCKET_PATH"
-    ls -la $SOCKET_PATH
+# 11. Verificar conexão
+echo "11. Verificando conexão..."
+if grep -q "unix:" /etc/nginx/sites-available/contabil; then
+    SOCKET_PATH=$(grep -o "unix:[^;]*" /etc/nginx/sites-available/contabil | sed 's|unix:||' | head -1)
+    if [ -S "$SOCKET_PATH" ]; then
+        echo "   Socket criado com sucesso: $SOCKET_PATH"
+        ls -la $SOCKET_PATH
+    else
+        echo "   AVISO: Socket não encontrado em $SOCKET_PATH"
+    fi
 else
-    echo "   AVISO: Socket não encontrado em $SOCKET_PATH"
+    # Verificar conexão TCP
+    TCP_PORT=$(grep -o "proxy_pass http://[^;]*" /etc/nginx/sites-available/contabil | grep -o ":[0-9]*" | grep -o "[0-9]*" | head -1)
+    if [ -n "$TCP_PORT" ]; then
+        echo "   Verificando conexão TCP na porta $TCP_PORT..."
+        if netstat -tuln | grep -q ":$TCP_PORT "; then
+            echo "   Conexão TCP OK: porta $TCP_PORT está em uso"
+        else
+            echo "   AVISO: Porta $TCP_PORT não está em uso!"
+        fi
+    else
+        echo "   AVISO: Não foi possível detectar a porta TCP configurada!"
+    fi
 fi
 
 echo "=========================================================="
