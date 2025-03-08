@@ -33,10 +33,24 @@
                 margin-left: 0;
             }
         }
+        /* Estilos para garantir que o rodapé fique na parte inferior */
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+        .content-wrapper {
+            flex: 1;
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gray-50">
     <!-- Barra Superior Fixa -->
     <header class="fixed w-full bg-white shadow-sm z-20">
         <div class="flex items-center justify-between px-6 py-3">
@@ -166,8 +180,8 @@
     </aside>
 
     <!-- Conteúdo Principal -->
-    <main class="main-content pt-16 min-h-screen">
-        <div class="p-6">
+    <main class="main-content pt-16">
+        <div class="content-wrapper p-6">
             <!-- Mensagens -->
             {% if messages %}
             <div class="mb-8">
