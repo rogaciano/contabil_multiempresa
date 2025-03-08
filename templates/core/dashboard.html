@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load custom_filters %}
 
 {% block title %}Dashboard{% endblock %}
 
@@ -119,7 +120,7 @@
                         <td class="px-4 py-3 text-sm text-gray-900">{{ transaction.description }}</td>
                         <td class="px-4 py-3 text-sm text-gray-900">{{ transaction.account.name }}</td>
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-right {% if transaction.type == 'D' %}text-red-600{% else %}text-green-600{% endif %}">
-                            {{ transaction.amount|floatformat:2 }}
+                            {{ transaction.amount|currency }}
                         </td>
                     </tr>
                     {% endfor %}
