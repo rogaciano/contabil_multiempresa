@@ -58,15 +58,19 @@ find $APP_DIR -type d -exec chmod 775 {} \;
 # Permissões para arquivos
 find $APP_DIR -type f -exec chmod 664 {} \;
 
+# Permissões especiais para executáveis no ambiente virtual
+echo "   Corrigindo permissões de executáveis no ambiente virtual..."
+find $APP_DIR/venv/bin -type f -exec chmod +x {} \;
+
 # Permissões para arquivos de log
 if [ -f "$APP_DIR/debug.log" ]; then
     chown www-data:www-data $APP_DIR/debug.log
     chmod 664 $APP_DIR/debug.log
 fi
 
-# 8. Verificar configuração do socket
-echo "8. Verificando configuração do socket..."
-if [ -f "/etc/nginx/sites-available/contabil" ]; then
+# 8. Verificar e alinhar configuração do socket
+echo "8. Verificando e alinhando configuração do socket..."
+if [ -f "/etc/nginx/sites-available/contabil" ] && [ -f "/etc/supervisor/conf.d/contabil.conf" ]; then
     NGINX_SOCKET=$(grep -o "unix:[^;]*" /etc/nginx/sites-available/contabil | head -1)
     SUPERVISOR_SOCKET=$(grep -o "unix:[^ ]*" /etc/supervisor/conf.d/contabil.conf | head -1)
     
@@ -75,7 +79,14 @@ if [ -f "/etc/nginx/sites-available/contabil" ]; then
     
     if [ "$NGINX_SOCKET" != "$SUPERVISOR_SOCKET" ]; then
         echo "   AVISO: Os sockets configurados no Nginx e no Supervisor são diferentes!"
-        echo "   Considere alinhar as configurações."
+        echo "   Alinhando as configurações..."
+        
+        # Extrair apenas o caminho do socket do Nginx (remover 'unix:')
+        SOCKET_PATH=$(echo $NGINX_SOCKET | sed 's|unix:||')
+        
+        # Atualizar a configuração do Supervisor para usar o mesmo socket que o Nginx
+        sed -i "s|--bind unix:[^ ]*|--bind $NGINX_SOCKET|" /etc/supervisor/conf.d/contabil.conf
+        echo "   Configuração do Supervisor atualizada para usar o socket: $NGINX_SOCKET"
     else
         echo "   Configuração de socket OK."
     fi
@@ -97,6 +108,21 @@ supervisorctl reread
 supervisorctl update
 supervisorctl restart contabil
 
+# Verificar se o Supervisor iniciou corretamente
+sleep 2
+SUPERVISOR_STATUS=$(supervisorctl status contabil | grep -o "RUNNING\|STOPPED\|ERROR")
+if [ "$SUPERVISOR_STATUS" != "RUNNING" ]; then
+    echo "   AVISO: O Supervisor não está rodando! Tentando corrigir..."
+    
+    # Verificar se há problemas de permissão
+    echo "   Verificando permissões do executável do Gunicorn..."
+    chmod +x $APP_DIR/venv/bin/gunicorn
+    chmod +x $APP_DIR/venv/bin/python
+    
+    echo "   Tentando iniciar novamente..."
+    supervisorctl start contabil
+fi
+
 echo "   Reiniciando Nginx..."
 systemctl restart nginx
 
@@ -106,6 +132,16 @@ echo "   Status do Supervisor:"
 supervisorctl status contabil
 echo "   Status do Nginx:"
 systemctl status nginx --no-pager | head -5
+
+# 11. Verificar se o socket foi criado
+echo "11. Verificando se o socket foi criado..."
+SOCKET_PATH=$(echo $NGINX_SOCKET | sed 's|unix:||')
+if [ -S "$SOCKET_PATH" ]; then
+    echo "   Socket criado com sucesso: $SOCKET_PATH"
+    ls -la $SOCKET_PATH
+else
+    echo "   AVISO: Socket não encontrado em $SOCKET_PATH"
+fi
 
 echo "=========================================================="
 echo "   Atualização concluída!"
