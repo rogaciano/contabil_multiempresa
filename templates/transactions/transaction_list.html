@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
 
-{% block title %}Transações - Sistema Contábil{% endblock %}
+{% block title %}Livro Diário - Sistema Contábil{% endblock %}
 
 {% block content %}
 <div class="bg-white shadow rounded-lg p-6">
     <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold">Lista de Transações</h2>
+        <h2 class="text-2xl font-bold">Livro Diário</h2>
         <div class="flex space-x-2">
             <a href="{% url 'transaction_create' %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                Nova Transação
+                Novo Lançamento
             </a>
             <a href="{% url 'transaction_export' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                 Exportar CSV

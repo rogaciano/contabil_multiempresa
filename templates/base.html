@@ -126,11 +126,11 @@
                     Plano de Contas
                 </a>
 
-                <!-- Transações -->
+                <!-- Livro Diário -->
                 <a href="{% url 'transaction_list' %}" 
                    class="flex items-center px-3 py-2 rounded-lg {% if 'transaction' in request.resolver_match.url_name %}bg-blue-50 text-blue-600{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
-                    <i class="fas fa-exchange-alt mr-3"></i>
-                    Transações
+                    <i class="fas fa-book-journal-whills mr-3"></i>
+                    Livro Diário
                 </a>
 
                 <!-- Empresas -->
@@ -161,7 +161,10 @@
                         <a href="{% url 'balance_sheet' %}" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100">Balanço Patrimonial</a>
                         <a href="{% url 'income_statement' %}" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100">DRE</a>
                         <a href="{% url 'cash_flow' %}" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100">Fluxo de Caixa</a>
+                        <a href="{% url 'trial_balance' %}" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100">Balancete</a>
+                        <a href="{% url 'general_ledger' %}" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100">Razão</a>
                     </div>
+
                 </div>
             </nav>
         </div>

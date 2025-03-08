@@ -9,7 +9,7 @@
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-2xl font-bold text-gray-800">{{ company.name }}</h1>
             <div class="flex space-x-3">
-                <a href="{% url 'company_edit' company.id %}" class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded">
+                <a href="{% url 'company_update' company.id %}" class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded">
                     <i class="fas fa-edit mr-2"></i> Editar
                 </a>
                 <a href="{% url 'company_list' %}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded">

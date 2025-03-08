@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{% if form.instance.pk %}Editar{% else %}Nova{% endif %} Transação - Sistema Contábil{% endblock %}
+{% block title %}{% if form.instance.pk %}Editar{% else %}Novo{% endif %} Lançamento - Livro Diário{% endblock %}
 
 {% block extra_css %}
 {{ form.media.css }}
@@ -9,7 +9,7 @@
 
 {% block content %}
 <div class="bg-white shadow rounded-lg p-6">
-    <h2 class="text-2xl font-bold mb-6">{% if form.instance.pk %}Editar{% else %}Nova{% endif %} Transação</h2>
+    <h2 class="text-2xl font-bold mb-6">{% if form.instance.pk %}Editar{% else %}Novo{% endif %} Lançamento no Livro Diário</h2>
 
     <form method="post" class="space-y-6" id="transaction-form">
         {% csrf_token %}
@@ -23,6 +23,28 @@
 {{ form.media.js }}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Tradução global para o Select2
+        if ($.fn.select2) {
+            $.fn.select2.defaults.set('language', {
+                errorLoading: function() { return 'Os resultados não puderam ser carregados.'; },
+                inputTooLong: function(args) {
+                    var overChars = args.input.length - args.maximum;
+                    return 'Por favor, apague ' + overChars + ' caractere' + (overChars != 1 ? 's' : '');
+                },
+                inputTooShort: function(args) {
+                    var remainingChars = args.minimum - args.input.length;
+                    return 'Por favor, digite mais ' + remainingChars + ' caractere' + (remainingChars != 1 ? 's' : '');
+                },
+                loadingMore: function() { return 'Carregando mais resultados...'; },
+                maximumSelected: function(args) {
+                    return 'Você só pode selecionar ' + args.maximum + ' item' + (args.maximum != 1 ? 'ns' : '');
+                },
+                noResults: function() { return 'Nenhuma conta encontrada'; },
+                searching: function() { return 'Pesquisando...'; },
+                removeAllItems: function() { return 'Remover todos os itens'; }
+            });
+        }
+        
         // Inicializar Select2 manualmente
         if ($.fn.select2) {
             $('.django-select2').select2({
@@ -30,14 +52,14 @@
                 placeholder: function() {
                     return $(this).data('placeholder');
                 },
-                allowClear: true
+                allowClear: true,
+                minimumInputLength: 0  // Permitir busca com qualquer quantidade de caracteres
             });
-        }
-        
-        // Adicionar datepicker ao campo de data
-        const dateField = document.querySelector('#id_date');
-        if (dateField) {
-            dateField.type = 'date';
+            
+            // Abrir o dropdown automaticamente ao focar no campo
+            $('.django-select2').on('focus', function() {
+                $(this).select2('open');
+            });
         }
         
         // Atualizar o indicador de equilíbrio após o envio do formulário

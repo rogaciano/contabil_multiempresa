@@ -232,3 +232,4 @@ LOGGING = {
 SELECT2_CACHE_BACKEND = 'select2'
 SELECT2_JS = 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js'
 SELECT2_CSS = 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css'
+SELECT2_MINIMUM_INPUT_LENGTH = 0  # Permitir busca com qualquer quantidade de caracteres

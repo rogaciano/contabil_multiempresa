@@ -137,10 +137,17 @@ class Account(models.Model):
 
     @property
     def is_leaf(self):
-        """Retorna True se a conta não tem filhos."""
+        """Retorna True se a conta não tem filhos (conta analítica)."""
         if not self.pk:  # Se a conta ainda não foi salva, consideramos como folha
             return True
         return not self.children.exists()
+    
+    @property
+    def is_synthetic(self):
+        """Retorna True se a conta tem filhos (conta sintética)."""
+        if not self.pk:  # Se a conta ainda não foi salva, consideramos como não sintética
+            return False
+        return self.children.exists()
 
     @property
     def level(self):

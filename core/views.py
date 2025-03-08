@@ -13,6 +13,7 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
 from django.contrib.auth import login
+from django.utils.translation import gettext as _
 import logging
 
 logger = logging.getLogger(__name__)
@@ -308,6 +309,55 @@ class CompanyUpdateView(LoginRequiredMixin, UpdateView):
     def form_valid(self, form):
         response = super().form_valid(form)
         messages.success(self.request, _('Empresa atualizada com sucesso!'))
+        return response
+
+
+class CompanyDeleteView(LoginRequiredMixin, DeleteView):
+    model = Company
+    template_name = 'core/company_confirm_delete.html'
+    success_url = reverse_lazy('company_list')
+    
+    def get_queryset(self):
+        try:
+            user_profile = self.request.user.profile
+            return user_profile.companies.all()
+        except UserProfile.DoesNotExist:
+            return Company.objects.none()
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        company = self.get_object()
+        
+        # Contar os registros relacionados para mostrar ao usuário
+        context['transactions_count'] = Transaction.objects.filter(company=company).count()
+        context['accounts_count'] = Account.objects.filter(company=company).count()
+        
+        return context
+    
+    def delete(self, request, *args, **kwargs):
+        company = self.get_object()
+        company_name = company.name
+        
+        # Se a empresa a ser excluída for a atual na sessão, limpar a sessão
+        if request.session.get('current_company_id') == company.id:
+            request.session['current_company_id'] = None
+            request.session.modified = True
+        
+        # Verificar se o usuário tem outras empresas e atualizar o perfil
+        user_profile = request.user.profile
+        if user_profile.last_company_id == company.id:
+            # Encontrar outra empresa para definir como última
+            other_company = user_profile.companies.exclude(id=company.id).first()
+            if other_company:
+                user_profile.last_company_id = other_company.id
+            else:
+                user_profile.last_company_id = None
+            user_profile.save(update_fields=['last_company_id'])
+        
+        # Excluir a empresa (as relações serão excluídas em cascata devido ao on_delete=models.CASCADE)
+        response = super().delete(request, *args, **kwargs)
+        
+        messages.success(request, _(f'Empresa "{company_name}" e todos os seus dados foram excluídos com sucesso!'))
         return response
 
 # Views para gerenciamento de anos fiscais

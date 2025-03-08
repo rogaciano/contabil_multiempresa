@@ -76,7 +76,7 @@
         </table>
     </div>
     
-    {% if total_debit != total_credit %}
+    {% if not is_balanced %}
     <div class="mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-4">
         <div class="flex">
             <div class="flex-shrink-0">
@@ -86,7 +86,7 @@
             </div>
             <div class="ml-3">
                 <p class="text-sm text-yellow-700">
-                    <strong>Atenção:</strong> O balancete não está equilibrado. A diferença é de R$ {{ total_debit|subtract:total_credit|currency }}.
+                    <strong>Atenção:</strong> O balancete não está equilibrado. A diferença é de R$ {{ difference|currency }}.
                 </p>
             </div>
         </div>

@@ -59,9 +59,14 @@
                                 <a href="{% url 'company_detail' company.id %}" class="text-blue-600 hover:text-blue-900 mr-3">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <a href="{% url 'company_update' company.id %}" class="text-indigo-600 hover:text-indigo-900">
+                                <a href="{% url 'company_update' company.id %}" class="text-indigo-600 hover:text-indigo-900 mr-3">
                                     <i class="fas fa-edit"></i>
                                 </a>
+                                <form method="get" action="{% url 'company_delete' company.id %}" class="inline">
+                                    <button type="submit" class="text-red-600 hover:text-red-900 border-0 bg-transparent p-0">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                     {% endfor %}

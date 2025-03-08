@@ -102,14 +102,8 @@ class Report(models.Model):
         total_expenses = sum(abs(account.get_balance(end_date=self.end_date)) for account in leaf_expenses)
         
         # Resultado do período é a receita líquida menos as despesas
-        # Para contas de patrimônio líquido, o saldo positivo significa crédito
-        # Portanto, se o resultado for negativo, mantemos o sinal negativo
-        # Se for positivo, mantemos o sinal positivo
         net_income = net_revenue - total_expenses
         
-        # Para despesas de teste (como informado pelo usuário), inverter o sinal
-        # Isso é necessário porque as despesas são naturalmente devedoras (negativas)
-        # mas no balanço patrimonial, o resultado deve aparecer como positivo
         if net_income < 0:
             # Se for prejuízo (resultado negativo), manter o sinal negativo
             logger.info(f"Resultado negativo (prejuízo): {net_income}")
@@ -120,10 +114,30 @@ class Report(models.Model):
         logger.info(f"Resultado do período: Receitas Brutas ({total_revenue}) - Deduções ({total_deductions}) = Receita Líquida ({net_revenue})")
         logger.info(f"Receita Líquida ({net_revenue}) - Despesas ({total_expenses}) = Resultado ({net_income})")
         
-        # Calcular saldos individuais das contas (sem incluir o resultado do período)
-        asset_balances = [(account, account.get_balance(end_date=self.end_date)) for account in assets]
-        liability_balances = [(account, account.get_balance(end_date=self.end_date)) for account in liabilities]
-        equity_balances = [(account, account.get_balance(end_date=self.end_date)) for account in equity]
+        # Calcular saldos individuais das contas - APENAS PARA CONTAS ANALÍTICAS (FOLHAS)
+        asset_balances = []
+        for account in assets:
+            if account.is_leaf:  # Apenas contas analíticas
+                balance = account.get_balance(end_date=self.end_date)
+                if balance != 0:
+                    asset_balances.append((account, balance))
+                    logger.info(f"Conta de ativo (analítica): {account.code} - {account.name}, Saldo: {balance}")
+        
+        liability_balances = []
+        for account in liabilities:
+            if account.is_leaf:  # Apenas contas analíticas
+                balance = account.get_balance(end_date=self.end_date)
+                if balance != 0:
+                    liability_balances.append((account, balance))
+                    logger.info(f"Conta de passivo (analítica): {account.code} - {account.name}, Saldo: {balance}")
+        
+        equity_balances = []
+        for account in equity:
+            if account.is_leaf:  # Apenas contas analíticas
+                balance = account.get_balance(end_date=self.end_date)
+                if balance != 0:
+                    equity_balances.append((account, balance))
+                    logger.info(f"Conta de patrimônio líquido (analítica): {account.code} - {account.name}, Saldo: {balance}")
         
         # Verificar se a conta de lucros/prejuízos acumulados existe (código 3.5)
         retained_earnings = Account.objects.filter(
@@ -136,9 +150,6 @@ class Report(models.Model):
         result_added = False
         
         # Para a conta 3.5 (Lucros/Prejuízos Acumulados), o resultado deve manter seu sinal original
-        # Despesas reduzem o patrimônio líquido, então devem aparecer como negativas
-        # Receitas aumentam o patrimônio líquido, então devem aparecer como positivas
-        # Como o usuário confirmou que o valor deve ser negativo para despesas, vamos usar o valor original
         display_net_income = net_income
         
         if retained_earnings:
@@ -148,8 +159,6 @@ class Report(models.Model):
             for i, (account, balance) in enumerate(equity_balances):
                 if account.id == retained_earnings.id:
                     # Definir o saldo como o resultado do período (DRE)
-                    # Importante: substituir o saldo atual, não adicionar ao saldo existente
-                    # Usar o valor com sinal original
                     equity_balances[i] = (account, display_net_income)
                     result_added = True
                     logger.info(f"Definindo saldo da conta {account.code} - {account.name} como o resultado do período ({display_net_income})")
@@ -193,88 +202,61 @@ class Report(models.Model):
             result_added = True
             logger.info(f"Criando conta virtual {retained_earnings.code} - {retained_earnings.name} com saldo {display_net_income}")
         
-        # Calcular total do patrimônio líquido
-        # Somar apenas as contas folha para evitar contagem dupla
-        # Importante: NÃO excluir a conta 3.5 (Lucros/Prejuízos Acumulados) do cálculo do total
-        equity_total = 0
-        leaf_equity = [account for account in equity if account.is_leaf]
-        for account in leaf_equity:
-            equity_total += account.get_balance(end_date=self.end_date)
-            logger.info(f"Adicionando saldo da conta {account.code} - {account.name}: {account.get_balance(end_date=self.end_date)} ao total do patrimônio líquido")
+        # Calcular totais usando apenas contas analíticas (folhas)
+        total_assets = sum(balance for _, balance in asset_balances)
+        total_liabilities = sum(balance for _, balance in liability_balances)
+        equity_total = sum(balance for _, balance in equity_balances)
         
-        # Adicionar o resultado do período ao total do patrimônio líquido apenas se não foi adicionado anteriormente
-        # Isso só deve acontecer se não existir a conta 3.5 ou se ela não estiver na lista de equity_balances
-        if not result_added:
-            equity_total += display_net_income
-            logger.info(f"Adicionando resultado ({display_net_income}) diretamente ao total do patrimônio líquido")
-        else:
-            logger.info(f"Resultado ({display_net_income}) já foi adicionado à conta 3.5, não adicionando novamente ao total")
+        # Agora, calcular os saldos das contas sintéticas (com filhos)
+        # Para o Ativo
+        synthetic_assets = {}
+        for account in assets:
+            if not account.is_leaf:
+                # Calcular o saldo desta conta sintética somando suas contas analíticas filhas
+                synthetic_balance = 0
+                for child_account, child_balance in asset_balances:
+                    if child_account.code.startswith(account.code + '.') or child_account.code == account.code:
+                        synthetic_balance += child_balance
+                
+                if synthetic_balance != 0:
+                    synthetic_assets[account.code] = synthetic_balance
+                    asset_balances.append((account, synthetic_balance))
+                    logger.info(f"Conta de ativo (sintética): {account.code} - {account.name}, Saldo calculado: {synthetic_balance}")
         
-        # Calcular total de ativos
-        total_assets = 0
-        leaf_assets = [account for account in assets if account.is_leaf]
-        for account in leaf_assets:
-            total_assets += account.get_balance(end_date=self.end_date)
-            logger.info(f"Adicionando saldo da conta {account.code} - {account.name}: {account.get_balance(end_date=self.end_date)} ao total de ativos")
+        # Para o Passivo
+        synthetic_liabilities = {}
+        for account in liabilities:
+            if not account.is_leaf:
+                # Calcular o saldo desta conta sintética somando suas contas analíticas filhas
+                synthetic_balance = 0
+                for child_account, child_balance in liability_balances:
+                    if child_account.code.startswith(account.code + '.') or child_account.code == account.code:
+                        synthetic_balance += child_balance
+                
+                if synthetic_balance != 0:
+                    synthetic_liabilities[account.code] = synthetic_balance
+                    liability_balances.append((account, synthetic_balance))
+                    logger.info(f"Conta de passivo (sintética): {account.code} - {account.name}, Saldo calculado: {synthetic_balance}")
         
-        # Calcular total de passivos
-        total_liabilities = 0
-        leaf_liabilities = [account for account in liabilities if account.is_leaf]
-        for account in leaf_liabilities:
-            total_liabilities += account.get_balance(end_date=self.end_date)
-            logger.info(f"Adicionando saldo da conta {account.code} - {account.name}: {account.get_balance(end_date=self.end_date)} ao total de passivos")
-        
-        # Ajustar o patrimônio líquido para equilibrar o balanço
-        # O patrimônio líquido deve ser igual ao total de ativos menos o total de passivos
-        equity_total = total_assets - total_liabilities
-        logger.info(f"Ajustando o patrimônio líquido para {equity_total} para equilibrar o balanço")
-        
-        # Ajustar o valor da conta 3.5 para refletir o resultado do período
-        # O valor da conta 3.5 deve ser o valor do patrimônio líquido menos o capital social
-        capital_social = 0
+        # Para o Patrimônio Líquido
+        synthetic_equity = {}
         for account in equity:
-            if account.code == '3.1':  # Capital Social
-                capital_social = account.get_balance(end_date=self.end_date)
-                logger.info(f"Capital Social: {capital_social}")
-                break
+            if not account.is_leaf:
+                # Calcular o saldo desta conta sintética somando suas contas analíticas filhas
+                synthetic_balance = 0
+                for child_account, child_balance in equity_balances:
+                    if child_account.code.startswith(account.code + '.') or child_account.code == account.code:
+                        synthetic_balance += child_balance
+                
+                if synthetic_balance != 0:
+                    synthetic_equity[account.code] = synthetic_balance
+                    equity_balances.append((account, synthetic_balance))
+                    logger.info(f"Conta de patrimônio líquido (sintética): {account.code} - {account.name}, Saldo calculado: {synthetic_balance}")
         
-        # O valor da conta 3.5 deve ser ajustado para equilibrar o balanço
-        retained_earnings_balance = equity_total - capital_social
-        logger.info(f"Valor ajustado para Lucros/Prejuízos Acumulados: {retained_earnings_balance}")
-        
-        # Atualizar o saldo da conta 3.5 (Lucros/Prejuízos Acumulados)
-        for i, (account, _) in enumerate(equity_balances):
-            if account.code == '3.5':
-                equity_balances[i] = (account, retained_earnings_balance)
-                logger.info(f"Atualizando saldo da conta {account.code} - {account.name} para {retained_earnings_balance}")
-                break
-        
-        # Calcular totais dos grupos pai
-        def calculate_group_totals(accounts_with_balances):
-            # Criar um dicionário para armazenar os totais de cada grupo
-            group_totals = {}
-            
-            # Para cada conta e seu saldo
-            for account, balance in accounts_with_balances:
-                # Se a conta tiver um pai
-                if account.parent:
-                    parent_code = account.parent.code
-                    # Se o pai ainda não estiver no dicionário, inicializar com zero
-                    if parent_code not in group_totals:
-                        group_totals[parent_code] = 0
-                    # Adicionar o saldo da conta ao total do grupo pai
-                    group_totals[parent_code] += balance
-            
-            # Retornar o dicionário com os totais dos grupos
-            return group_totals
-        
-        # Calcular totais dos grupos para ativos, passivos e patrimônio líquido
-        asset_group_totals = calculate_group_totals(asset_balances)
-        liability_group_totals = calculate_group_totals(liability_balances)
-        equity_group_totals = calculate_group_totals(equity_balances)
-        
-        # Garantir que o total do grupo 3 (Patrimônio Líquido) seja igual ao total do patrimônio líquido
-        equity_group_totals['3'] = equity_total
+        # Ordenar as listas por código de conta
+        asset_balances.sort(key=lambda x: x[0].code)
+        liability_balances.sort(key=lambda x: x[0].code)
+        equity_balances.sort(key=lambda x: x[0].code)
         
         # Calcular a diferença entre ativos e passivos + patrimônio líquido
         difference = total_assets - (total_liabilities + equity_total)
@@ -284,9 +266,6 @@ class Report(models.Model):
             'assets': asset_balances,
             'liabilities': liability_balances,
             'equity': equity_balances,
-            'asset_group_totals': asset_group_totals,
-            'liability_group_totals': liability_group_totals,
-            'equity_group_totals': equity_group_totals,
             'total_assets': total_assets,
             'total_liabilities': total_liabilities,
             'total_equity': equity_total,
@@ -301,8 +280,12 @@ class Report(models.Model):
         data['is_balanced'] = abs(data['total_assets'] - data['total_liabilities_equity']) < 0.01
         
         # Logs finais para depuração
+        logger.info(f"Balanço Patrimonial - Total de ativos: {data['total_assets']}")
+        logger.info(f"Balanço Patrimonial - Total de passivos: {data['total_liabilities']}")
         logger.info(f"Balanço Patrimonial - Total de patrimônio líquido: {data['total_equity']}")
         logger.info(f"Balanço Patrimonial - Total de passivos + patrimônio líquido: {data['total_liabilities_equity']}")
+        logger.info(f"Balanço Patrimonial - Diferença: {data['difference']}")
+        logger.info(f"Balanço Patrimonial - Está balanceado: {data['is_balanced']}")
         
         return data
     
@@ -460,36 +443,71 @@ class Report(models.Model):
             raise ValueError(_('Este relatório não é um Balancete de Verificação'))
             
         from accounts.models import Account, AccountType
+        import logging
         
+        logger = logging.getLogger(__name__)
+        logger.info(f"Gerando balancete para empresa {self.company.name} (ID: {self.company.id})")
+        
+        # Obter apenas contas ativas e ordenar por código
         accounts = Account.objects.filter(company=self.company, is_active=True).order_by('code')
         accounts_data = []
         total_debit = 0
         total_credit = 0
         
+        # Primeiro passo: processar apenas contas analíticas (folhas)
         for account in accounts:
-            balance = account.get_balance(
-                start_date=self.start_date,
-                end_date=self.end_date
-            )
-            
-            if balance != 0:
-                # Determinar se o saldo deve ir para débito ou crédito com base no tipo de conta
-                if account.type in [AccountType.ASSET, AccountType.EXPENSE]:
-                    # Para contas de Ativo e Despesa:
-                    # - Débito aumenta o saldo (positivo)
-                    # - Crédito diminui o saldo (negativo)
-                    debit = balance if balance > 0 else 0
-                    credit = -balance if balance < 0 else 0
-                else:
-                    # Para contas de Passivo, Patrimônio Líquido e Receita:
-                    # - Crédito aumenta o saldo (positivo)
-                    # - Débito diminui o saldo (negativo)
-                    debit = -balance if balance < 0 else 0
-                    credit = balance if balance > 0 else 0
+            # Verificar se é uma conta analítica (sem filhos)
+            if account.is_leaf:
+                balance = account.get_balance(
+                    start_date=self.start_date,
+                    end_date=self.end_date
+                )
                 
-                accounts_data.append((account, debit, credit))
-                total_debit += debit
-                total_credit += credit
+                if balance != 0:
+                    # Determinar se o saldo deve ir para débito ou crédito com base no tipo de conta
+                    if account.type in [AccountType.ASSET, AccountType.EXPENSE]:
+                        # Para contas de Ativo e Despesa:
+                        # - Débito aumenta o saldo (positivo)
+                        # - Crédito diminui o saldo (negativo)
+                        debit = balance if balance > 0 else 0
+                        credit = -balance if balance < 0 else 0
+                    else:
+                        # Para contas de Passivo, Patrimônio Líquido e Receita:
+                        # - Crédito aumenta o saldo (positivo)
+                        # - Débito diminui o saldo (negativo)
+                        debit = -balance if balance < 0 else 0
+                        credit = balance if balance > 0 else 0
+                    
+                    accounts_data.append((account, debit, credit))
+                    total_debit += debit
+                    total_credit += credit
+                    logger.info(f"Conta analítica: {account.code} - {account.name}, Débito: {debit}, Crédito: {credit}")
+        
+        # Segundo passo: calcular os saldos das contas sintéticas (com filhos)
+        synthetic_accounts = {}
+        
+        for account in accounts:
+            if not account.is_leaf:
+                # Inicializar os totais para esta conta sintética
+                synthetic_accounts[account.code] = {'debit': 0, 'credit': 0}
+                
+                # Encontrar todas as contas analíticas que são descendentes desta conta sintética
+                for child_account, child_debit, child_credit in accounts_data:
+                    if child_account.code.startswith(account.code + '.') or child_account.code == account.code:
+                        synthetic_accounts[account.code]['debit'] += child_debit
+                        synthetic_accounts[account.code]['credit'] += child_credit
+                
+                # Adicionar a conta sintética ao resultado se tiver saldo
+                debit = synthetic_accounts[account.code]['debit']
+                credit = synthetic_accounts[account.code]['credit']
+                
+                if debit > 0 or credit > 0:
+                    accounts_data.append((account, debit, credit))
+                    logger.info(f"Conta sintética: {account.code} - {account.name}, Débito: {debit}, Crédito: {credit}")
+                    # Não adicionar aos totais, pois já foram contabilizados através das contas analíticas
+        
+        # Ordenar o resultado final por código de conta
+        accounts_data.sort(key=lambda x: x[0].code)
         
         data = {
             'accounts': accounts_data,
@@ -498,6 +516,11 @@ class Report(models.Model):
             'is_balanced': abs(total_debit - total_credit) < 0.01,
             'difference': abs(total_debit - total_credit)
         }
+        
+        logger.info(f"Balancete - Total de débitos: {total_debit}")
+        logger.info(f"Balancete - Total de créditos: {total_credit}")
+        logger.info(f"Balancete - Diferença: {data['difference']}")
+        logger.info(f"Balancete - Está balanceado: {data['is_balanced']}")
         
         return data
         

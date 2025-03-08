@@ -172,7 +172,12 @@ class TrialBalanceView(LoginRequiredMixin, TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        end_date = self.request.GET.get('end_date', timezone.now().date())
+        end_date_str = self.request.GET.get('end_date')
+        
+        if end_date_str:
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        else:
+            end_date = timezone.now().date()
         
         # Obter a empresa atual da sessão
         company_id = self.request.session.get('current_company_id')
@@ -191,38 +196,30 @@ class TrialBalanceView(LoginRequiredMixin, TemplateView):
             company=company
         )
         
-        accounts = Account.objects.filter(company=company, is_active=True).order_by('code')
-        trial_balance = []
-        total_debit = total_credit = 0
+        # Usar a função corrigida do modelo Report para gerar o balancete
+        data = report.get_trial_balance_data()
         
-        for account in accounts:
-            balance = account.get_balance(end_date=end_date)
-            if balance != 0:
-                # Determinar se o saldo deve ir para débito ou crédito com base no tipo de conta
-                if account.type in [AccountType.ASSET, AccountType.EXPENSE]:
-                    # Para contas de Ativo e Despesa, saldo positivo é débito, negativo é crédito
-                    debit = balance if balance > 0 else 0
-                    credit = -balance if balance < 0 else 0
-                else:
-                    # Para contas de Passivo, Patrimônio Líquido e Receita, saldo positivo é crédito, negativo é débito
-                    debit = -balance if balance < 0 else 0
-                    credit = balance if balance > 0 else 0
-                
-                trial_balance.append({
-                    'account': account,
-                    'debit': debit,
-                    'credit': credit
-                })
-                total_debit += debit
-                total_credit += credit
+        # Formatar os dados para o template
+        trial_balance = []
+        for account, debit, credit in data['accounts']:
+            trial_balance.append({
+                'account': account,
+                'debit': debit,
+                'credit': credit
+            })
         
         context.update({
             'trial_balance': trial_balance,
-            'total_debit': total_debit,
-            'total_credit': total_credit,
+            'total_debit': data['total_debit'],
+            'total_credit': data['total_credit'],
+            'is_balanced': data['is_balanced'],
+            'difference': data['difference'],
             'end_date': end_date,
             'now': timezone.now()
         })
+        
+        # Excluir o relatório temporário
+        report.delete()
         
         return context
 
