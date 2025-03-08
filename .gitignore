@@ -39,3 +39,4 @@ var/
 .vscode/
 *.swp
 *.swo
+debug.log

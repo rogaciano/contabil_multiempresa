@@ -62,7 +62,7 @@
             <!-- Logo para barra superior -->
             <div class="flex items-center">
                 <a href="{% url 'dashboard' %}" class="text-xl font-bold text-gray-800 hidden md:block">
-                    <i class="fas fa-balance-scale mr-2"></i> Contabil
+                    <i class="fas fa-balance-scale mr-2"></i> Contabil Estudos
                 </a>
             </div>
 
@@ -107,7 +107,7 @@
             <!-- Logo -->
             <div class="mb-8 px-2">
                 <a href="{% url 'dashboard' %}" class="text-xl font-bold text-gray-800">
-                    <i class="fas fa-balance-scale mr-2"></i> Contabil
+                    <i class="fas fa-balance-scale mr-2"></i> Contabil Estudos
                 </a>
             </div>
 
@@ -120,21 +120,11 @@
                 </a>
 
                 <!-- Contas -->
-                <div x-data="{ open: false }" class="relative">
-                    <button @click="open = !open" 
-                            class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100">
-                        <div>
-                            <i class="fas fa-book mr-3"></i>
-                            Contas
-                        </div>
-                        <i class="fas fa-chevron-down text-sm transition-transform" :class="{ 'rotate-180': open }"></i>
-                    </button>
-                    <div x-show="open" class="ml-8 mt-1 space-y-1">
-                        <a href="{% url 'account_list' %}" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100">Listar Contas</a>
-                        <a href="{% url 'account_create' %}" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100">Nova Conta</a>
-                        <a href="{% url 'account_chart' %}" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100">Plano de Contas</a>
-                    </div>
-                </div>
+                <a href="{% url 'account_list' %}" 
+                   class="flex items-center px-3 py-2 rounded-lg {% if 'account' in request.resolver_match.url_name %}bg-blue-50 text-blue-600{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
+                    <i class="fas fa-book mr-3"></i>
+                    Contas
+                </a>
 
                 <!-- Transações -->
                 <a href="{% url 'transaction_list' %}" 
