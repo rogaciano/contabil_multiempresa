@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.utils.translation import gettext as _
 
 from .ai_forms import AIAccountPlanForm
-from .services import AnthropicService
+from .services import AIService
 from .models import Account
 
 class AIAccountPlanGeneratorView(LoginRequiredMixin, FormView):
@@ -28,7 +28,7 @@ class AIAccountPlanGeneratorView(LoginRequiredMixin, FormView):
             messages.error(self.request, _('Selecione uma empresa antes de gerar um plano de contas.'))
             return redirect('company_list')
         
-        # Preparar os dados para a API da Anthropic
+        # Preparar os dados para a API da AIService
         business_type = form.cleaned_data['business_type']
         business_subtype = form.cleaned_data['business_subtype']
         business_size = form.cleaned_data['business_size']
@@ -84,8 +84,8 @@ class AIAccountPlanResultView(LoginRequiredMixin, TemplateView):
             context['error'] = True
             return context
         
-        # Gerar o plano de contas usando a API da Anthropic
-        accounts_data = AnthropicService.generate_account_plan(
+        # Gerar o plano de contas usando a API da AIService
+        accounts_data = AIService.generate_account_plan(
             business_type=business_type,
             business_details=business_details,
             company_id=company_id
@@ -145,7 +145,7 @@ class AIAccountPlanResultView(LoginRequiredMixin, TemplateView):
                 return redirect('ai_account_plan_result')
         
         # Gerar o plano de contas novamente
-        accounts_data = AnthropicService.generate_account_plan(
+        accounts_data = AIService.generate_account_plan(
             business_type=business_type,
             business_details=business_details,
             company_id=company_id
@@ -158,7 +158,7 @@ class AIAccountPlanResultView(LoginRequiredMixin, TemplateView):
         
         # Criar as contas no banco de dados
         try:
-            accounts_created, errors = AnthropicService.create_accounts_from_plan(accounts_data, company_id)
+            accounts_created, errors = AIService.create_accounts_from_plan(accounts_data, company_id)
             
             # Exibir mensagens de sucesso ou erro
             if accounts_created > 0:
