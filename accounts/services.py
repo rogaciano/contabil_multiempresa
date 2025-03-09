@@ -343,12 +343,11 @@ class GeminiService:
             logger.info(f"Iniciando chamada à API do Gemini com prompt de tamanho: {len(prompt)}")
             logger.info(f"URL da API: {url}")
             
-            # Adicionar um timeout mais curto para teste
-            response = requests.post(url, headers=headers, json=data, timeout=60)
-            
-            logger.info(f"Resposta recebida da API do Gemini com status: {response.status_code}")
+            # Adicionando apenas o timeout sem alterar a estrutura do código
+            response = requests.post(url, headers=headers, json=data, timeout=120)
             response.raise_for_status()
             
+            logger.info(f"Resposta recebida da API do Gemini com status: {response.status_code}")
             # Processar a resposta
             logger.info("Processando resposta JSON")
             result = response.json()
