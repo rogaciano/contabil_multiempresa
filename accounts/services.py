@@ -248,3 +248,224 @@ class AnthropicService:
             error_msg = f"Erro ao criar contas: {str(e)}"
             logger.error(error_msg)
             return 0, [error_msg]
+
+class GeminiService:
+    """Serviço para interagir com a API do Google Gemini"""
+    
+    API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent"
+    
+    @staticmethod
+    def get_api_key():
+        """Obtém a chave de API do Gemini das variáveis de ambiente"""
+        return os.getenv('GEMINI_API_KEY')
+    
+    @classmethod
+    def generate_account_plan(cls, business_type, business_details, company_id):
+        """
+        Gera um plano de contas usando a API do Gemini com base no tipo de negócio
+        
+        Args:
+            business_type (str): Tipo de negócio (serviços, indústria, comércio)
+            business_details (str): Detalhes adicionais sobre o negócio
+            company_id (int): ID da empresa para a qual o plano será gerado
+            
+        Returns:
+            dict: Plano de contas gerado ou mensagem de erro
+        """
+        api_key = cls.get_api_key()
+        if not api_key:
+            return {"error": "Chave de API do Gemini não configurada"}
+        
+        # Construir o prompt para a API
+        prompt = f"""
+        Você é um especialista em contabilidade. Preciso que crie um plano de contas contábil completo para uma empresa com as seguintes características:
+        
+        Tipo de negócio: {business_type}
+        Detalhes adicionais: {business_details}
+        
+        O plano de contas deve seguir a estrutura:
+        1. Ativo (A)
+        2. Passivo (L)
+        3. Patrimônio Líquido (E)
+        4. Receita (R)
+        5. Despesa (X)
+        
+        Para cada conta, forneça:
+        - Código (formato numérico com pontos, ex: 1.1.01)
+        - Nome da conta
+        - Tipo (um dos códigos acima: A, L, E, R, X)
+        - Conta pai (código da conta pai, se houver)
+        
+        Forneça o resultado em formato JSON seguindo exatamente esta estrutura:
+        {{
+            "accounts": [
+                {{
+                    "code": "1",
+                    "name": "Ativo",
+                    "type": "A",
+                    "parent": null
+                }},
+                {{
+                    "code": "1.1",
+                    "name": "Ativo Circulante",
+                    "type": "A",
+                    "parent": "1"
+                }},
+                ...
+            ]
+        }}
+        
+        Crie um plano de contas completo e adequado para o tipo de negócio especificado, com pelo menos 50 contas.
+        Responda APENAS com o JSON, sem texto adicional antes ou depois.
+        """
+        
+        # Preparar a requisição para a API do Gemini
+        url = f"{cls.API_URL}?key={api_key}"
+        headers = {
+            "Content-Type": "application/json"
+        }
+        
+        data = {
+            "contents": [
+                {
+                    "parts": [
+                        {"text": prompt}
+                    ]
+                }
+            ],
+            "generationConfig": {
+                "temperature": 0.2,
+                "maxOutputTokens": 4000
+            }
+        }
+        
+        try:
+            logger.info(f"Iniciando chamada à API do Gemini com prompt de tamanho: {len(prompt)}")
+            logger.info(f"URL da API: {url}")
+            
+            # Adicionar um timeout mais curto para teste
+            response = requests.post(url, headers=headers, json=data, timeout=60)
+            
+            logger.info(f"Resposta recebida da API do Gemini com status: {response.status_code}")
+            response.raise_for_status()
+            
+            # Processar a resposta
+            logger.info("Processando resposta JSON")
+            result = response.json()
+            logger.info(f"Resposta processada com sucesso, tamanho do JSON: {len(str(result))}")
+            
+        except requests.exceptions.Timeout as e:
+            logger.error(f"Timeout ao chamar a API do Gemini: {str(e)}")
+            return {"error": f"Timeout ao chamar a API do Gemini: {str(e)}"}
+        except requests.exceptions.ConnectionError as e:
+            logger.error(f"Erro de conexão com a API do Gemini: {str(e)}")
+            return {"error": f"Erro de conexão com a API do Gemini: {str(e)}"}
+        except requests.exceptions.HTTPError as e:
+            logger.error(f"Erro HTTP ao chamar a API do Gemini: {str(e)}")
+            return {"error": f"Erro HTTP ao chamar a API do Gemini: {str(e)}"}
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Erro na comunicação com a API do Gemini: {str(e)}")
+            return {"error": f"Erro na comunicação com a API do Gemini: {str(e)}"}
+        except json.JSONDecodeError as e:
+            logger.error(f"Erro ao processar a resposta da API: {str(e)}")
+            return {"error": f"Erro ao processar a resposta da API: {str(e)}"}
+        except Exception as e:
+            logger.error(f"Erro inesperado: {str(e)}")
+            return {"error": f"Erro inesperado: {str(e)}"}
+        
+        # Verificar se a resposta contém a estrutura esperada
+        if 'candidates' not in result or not result['candidates']:
+            return {"error": "Resposta da API não contém conteúdo"}
+                
+        # Extrair o texto da resposta
+        assistant_message = ""
+        for candidate in result.get('candidates', []):
+            content = candidate.get('content', {})
+            for part in content.get('parts', []):
+                if 'text' in part:
+                    assistant_message += part['text']
+        
+        # Tentar encontrar o JSON na resposta
+        # Primeiro, tentar encontrar o JSON completo
+        import re
+        json_pattern = r'({[\s\S]*})'
+        json_matches = re.findall(json_pattern, assistant_message)
+        
+        if json_matches:
+            # Tentar cada correspondência encontrada
+            for json_str in json_matches:
+                try:
+                    accounts_data = json.loads(json_str)
+                    # Verificar se o JSON tem a estrutura esperada
+                    if 'accounts' in accounts_data and isinstance(accounts_data['accounts'], list):
+                        return accounts_data
+                except json.JSONDecodeError:
+                    continue
+        
+        # Se não conseguir extrair o JSON completo, tentar extrair apenas a parte relevante
+        json_start = assistant_message.find('{')
+        json_end = assistant_message.rfind('}') + 1
+        
+        if json_start >= 0 and json_end > json_start:
+            json_str = assistant_message[json_start:json_end]
+            try:
+                accounts_data = json.loads(json_str)
+                # Verificar se o JSON tem a estrutura esperada
+                if 'accounts' in accounts_data and isinstance(accounts_data['accounts'], list):
+                    return accounts_data
+                else:
+                    # Tentar ajustar o JSON se estiver faltando a chave "accounts"
+                    if isinstance(accounts_data, list):
+                        return {"accounts": accounts_data}
+                    else:
+                        return {"error": "O JSON não contém a estrutura esperada"}
+            except json.JSONDecodeError as e:
+                return {"error": f"Erro ao processar o JSON: {str(e)}"}
+        
+        return {"error": "Não foi possível extrair o plano de contas da resposta"}
+    
+    @staticmethod
+    def create_accounts_from_plan(accounts_data, company_id):
+        """
+        Cria contas no banco de dados a partir do plano de contas gerado
+        """
+        # Reutiliza o mesmo método do AnthropicService
+        return AnthropicService.create_accounts_from_plan(accounts_data, company_id)
+
+# Classe para selecionar qual serviço de IA usar
+class AIService:
+    """Serviço para selecionar qual API de IA usar (Anthropic ou Gemini)"""
+    
+    @staticmethod
+    def get_service():
+        """
+        Determina qual serviço de IA usar com base na configuração
+        Prioriza Gemini se a chave estiver configurada, senão usa Anthropic
+        """
+        gemini_key = os.getenv('GEMINI_API_KEY')
+        if gemini_key:
+            return GeminiService
+        
+        anthropic_key = os.getenv('ANTROPIC_API_KEY')
+        if anthropic_key:
+            return AnthropicService
+            
+        # Se nenhuma chave estiver configurada, retorna Anthropic como padrão
+        return AnthropicService
+    
+    @classmethod
+    def generate_account_plan(cls, business_type, business_details, company_id):
+        """
+        Gera um plano de contas usando o serviço de IA selecionado
+        """
+        service = cls.get_service()
+        logger.info(f"Usando serviço de IA: {service.__name__}")
+        return service.generate_account_plan(business_type, business_details, company_id)
+    
+    @classmethod
+    def create_accounts_from_plan(cls, accounts_data, company_id):
+        """
+        Cria contas no banco de dados a partir do plano de contas gerado
+        """
+        service = cls.get_service()
+        return service.create_accounts_from_plan(accounts_data, company_id)
