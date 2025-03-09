@@ -12,22 +12,28 @@
             <form method="get" class="flex items-center space-x-2">
                 <div>
                     <label for="account" class="block text-sm font-medium text-gray-700">Conta</label>
-                    <select id="account" name="account" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                        <option value="">Selecione uma conta</option>
-                        {% for acc in accounts %}
-                        <option value="{{ acc.id }}" {% if account and account.id == acc.id %}selected{% endif %}>{{ acc.code }} - {{ acc.name }}</option>
-                        {% endfor %}
-                    </select>
+                    <div class="mt-1 flex rounded-md shadow-sm">
+                        <select id="account" name="account" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            <option value="">Selecione uma conta</option>
+                            {% for acc in accounts %}
+                            <option value="{{ acc.id }}" {% if account and account.id == acc.id %}selected{% endif %}>{{ acc.code }} - {{ acc.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                 </div>
                 <div>
                     <label for="start_date" class="block text-sm font-medium text-gray-700">Data Inicial</label>
-                    <input type="date" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" 
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    <div class="mt-1 flex rounded-md shadow-sm">
+                        <input type="date" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" 
+                               class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
                 </div>
                 <div>
                     <label for="end_date" class="block text-sm font-medium text-gray-700">Data Final</label>
-                    <input type="date" id="end_date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" 
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    <div class="mt-1 flex rounded-md shadow-sm">
+                        <input type="date" id="end_date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" 
+                               class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
                 </div>
                 <button type="submit" class="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                     Atualizar

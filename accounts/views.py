@@ -9,10 +9,15 @@ from django.contrib.auth.models import User
 from django.utils.translation import gettext as _
 import csv
 import json
+import os
+import logging
+from django.conf import settings
 
 from .models import Account, AccountType, UserProfile, Company
 from transactions.models import Transaction
 from .forms import AccountForm, UserProfileForm, UserForm
+
+logger = logging.getLogger(__name__)
 
 class AccountListView(LoginRequiredMixin, ListView):
     model = Account
@@ -580,17 +585,32 @@ class UserSettingsView(LoginRequiredMixin, TemplateView):
 class AccountTemplateDownloadView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="account_import_template.csv"'
+        response['Content-Disposition'] = 'attachment; filename="modelo_importacao_plano_contas.csv"'
         
         writer = csv.writer(response)
         writer.writerow(['code', 'name', 'type', 'parent_code', 'description', 'is_active'])
-        writer.writerow(['1', 'Ativo', 'A', '', 'Contas de Ativo', 'true'])
-        writer.writerow(['1.1', 'Ativo Circulante', 'A', '1', 'Contas de Ativo Circulante', 'true'])
-        writer.writerow(['1.1.1', 'Caixa', 'A', '1.1', 'Dinheiro em espécie', 'true'])
-        writer.writerow(['2', 'Passivo', 'L', '', 'Contas de Passivo', 'true'])
-        writer.writerow(['2.1', 'Passivo Circulante', 'L', '2', 'Contas de Passivo Circulante', 'true'])
-        writer.writerow(['3', 'Patrimônio Líquido', 'E', '', 'Contas de Patrimônio Líquido', 'true'])
-        writer.writerow(['4', 'Receitas', 'R', '', 'Contas de Receita', 'true'])
-        writer.writerow(['5', 'Despesas', 'X', '', 'Contas de Despesa', 'true'])
+        
+        # Ler o plano de contas padrão do arquivo CSV
+        plano_contas_path = os.path.join(settings.BASE_DIR, 'plano_contas_padrao.csv')
+        
+        try:
+            with open(plano_contas_path, 'r', encoding='utf-8') as f:
+                reader = csv.reader(f)
+                next(reader)  # Pular o cabeçalho
+                for row in reader:
+                    writer.writerow(row)
+        except Exception as e:
+            # Em caso de erro, usar um plano de contas básico como fallback
+            logger.error(f"Erro ao ler o arquivo de plano de contas padrão: {e}")
+            
+            # Plano de contas básico como fallback
+            writer.writerow(['1', 'Ativo', 'A', '', 'Contas de Ativo', 'true'])
+            writer.writerow(['1.1', 'Ativo Circulante', 'A', '1', 'Contas de Ativo Circulante', 'true'])
+            writer.writerow(['1.1.1', 'Caixa', 'A', '1.1', 'Dinheiro em espécie', 'true'])
+            writer.writerow(['2', 'Passivo', 'L', '', 'Contas de Passivo', 'true'])
+            writer.writerow(['2.1', 'Passivo Circulante', 'L', '2', 'Contas de Passivo Circulante', 'true'])
+            writer.writerow(['3', 'Patrimônio Líquido', 'E', '', 'Contas de Patrimônio Líquido', 'true'])
+            writer.writerow(['4', 'Receitas', 'R', '', 'Contas de Receita', 'true'])
+            writer.writerow(['5', 'Despesas', 'X', '', 'Contas de Despesa', 'true'])
         
         return response

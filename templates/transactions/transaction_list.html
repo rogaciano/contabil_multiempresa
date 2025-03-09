@@ -22,20 +22,26 @@
         <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
                 <label for="account" class="block text-sm font-medium text-gray-700">Conta</label>
-                <select id="account" name="account" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    <option value="">Todas as contas</option>
-                    {% for account in accounts %}
-                    <option value="{{ account.id }}" {% if request.GET.account == account.id|stringformat:"i" %}selected{% endif %}>{{ account.code }} - {{ account.name }}</option>
-                    {% endfor %}
-                </select>
+                <div class="mt-1 flex rounded-md shadow-sm">
+                    <select id="account" name="account" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <option value="">Todas as contas</option>
+                        {% for account in accounts %}
+                        <option value="{{ account.id }}" {% if request.GET.account == account.id|stringformat:"i" %}selected{% endif %}>{{ account.code }} - {{ account.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
             <div>
                 <label for="start_date" class="block text-sm font-medium text-gray-700">Data Inicial</label>
-                <input type="date" id="start_date" name="start_date" value="{{ request.GET.start_date|default:'' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                <div class="mt-1 flex rounded-md shadow-sm">
+                    <input type="date" id="start_date" name="start_date" value="{{ request.GET.start_date|default:'' }}" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                </div>
             </div>
             <div>
                 <label for="end_date" class="block text-sm font-medium text-gray-700">Data Final</label>
-                <input type="date" id="end_date" name="end_date" value="{{ request.GET.end_date|default:'' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                <div class="mt-1 flex rounded-md shadow-sm">
+                    <input type="date" id="end_date" name="end_date" value="{{ request.GET.end_date|default:'' }}" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                </div>
             </div>
             <div>
                 <label for="search" class="block text-sm font-medium text-gray-700">Buscar</label>
