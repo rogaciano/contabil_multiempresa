@@ -341,8 +341,10 @@ class Report(models.Model):
             # Converter para valor positivo para exibição na DRE
             # As deduções da receita são contas com natureza devedora (como despesas)
             adjusted_balance = abs(balance)
-            logger.info(f"Dedução da receita {account.code} - {account.name}: saldo original = {balance}, ajustado para DRE = {adjusted_balance}")
-            deduction_balances.append((account, adjusted_balance))
+            # Só adiciona à lista se o saldo for diferente de zero ou se for uma conta sintética
+            if adjusted_balance > 0 or not account.is_leaf:
+                logger.info(f"Dedução da receita {account.code} - {account.name}: saldo original = {balance}, ajustado para DRE = {adjusted_balance}")
+                deduction_balances.append((account, adjusted_balance))
         
         # Para despesas, garantir que os valores sejam positivos na DRE
         expense_balances = []
@@ -412,11 +414,6 @@ class Report(models.Model):
             # Somar apenas as contas folha para evitar duplicação
             total_deductions = sum(balance for account, balance in deduction_balances if account.is_leaf)
             logger.info(f"Usando total de deduções baseado em contas folha: {total_deductions}")
-            
-            # Se ainda for zero, somar todas as deduções
-            if total_deductions == 0:
-                total_deductions = sum(balance for _, balance in deduction_balances)
-                logger.info(f"Usando total de todas as deduções: {total_deductions}")
         
         logger.info(f"Total final de deduções calculado: {total_deductions}")
         data['total_deductions'] = total_deductions

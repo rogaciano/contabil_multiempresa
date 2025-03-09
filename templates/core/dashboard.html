@@ -58,12 +58,6 @@
                 
                 <div class="mt-4 border-t pt-3">
                     <div class="grid grid-cols-1 gap-4">
-                        <div class="bg-gray-50 p-3 rounded-lg shadow-sm">
-                            <div class="flex justify-between items-center">
-                                <span class="text-gray-600 text-sm font-medium">Total de Transações:</span>
-                                <span class="text-gray-800 font-semibold text-lg">{{ fiscal_year_transactions_count|default:"0" }}</span>
-                            </div>
-                        </div>
                         <div class="bg-green-50 p-3 rounded-lg shadow-sm">
                             <div class="flex justify-between items-center">
                                 <span class="text-gray-600 text-sm font-medium">Total de Receitas:</span>
@@ -74,6 +68,12 @@
                             <div class="flex justify-between items-center">
                                 <span class="text-gray-600 text-sm font-medium">Total de Despesas:</span>
                                 <span class="text-red-600 font-semibold text-lg">{{ total_expenses|currency }}</span>
+                            </div>
+                        </div>
+                        <div class="{% if total_revenue > total_expenses %}bg-green-50{% else %}bg-red-50{% endif %} p-3 rounded-lg shadow-sm">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600 text-sm font-medium">{% if total_revenue > total_expenses %}Lucro{% else %}Prejuízo{% endif %}:</span>
+                                <span class="{% if total_revenue > total_expenses %}text-green-600{% else %}text-red-600{% endif %} font-semibold text-lg">{{ total_revenue|subtract:total_expenses|currency }}</span>
                             </div>
                         </div>
                     </div>
