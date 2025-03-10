@@ -76,3 +76,8 @@ gunicorn/*.conf
 # Arquivos de sessão
 *.session
 sessions/
+
+# Arquivos de ambiente
+.env
+.env.*
+!.env.example
