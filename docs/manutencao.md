@@ -199,12 +199,12 @@ Este erro ocorre quando a requisição à API do Gemini ultrapassa o tempo limit
    # Edite o arquivo de configuração do Nginx
    sudo nano /etc/nginx/sites-available/contabil.conf
    
-   # Adicione ou atualize estas linhas
-   proxy_connect_timeout 300s;
-   proxy_send_timeout 300s;
-   proxy_read_timeout 300s;
+   # Adicione ou ajuste as seguintes linhas
+   proxy_connect_timeout 300;
+   proxy_send_timeout 300;
+   proxy_read_timeout 300;
    ```
-   
+
 3. **Ajustar timeout no Gunicorn**:
    - Verifique se o timeout do Gunicorn está configurado adequadamente:
    ```bash
@@ -237,6 +237,57 @@ Este erro ocorre quando a requisição à API do Gemini ultrapassa o tempo limit
    ```bash
    sudo supervisorctl restart contabil
    sudo systemctl restart nginx
+   ```
+
+### Erro 500 no Cadastro de Email
+
+Este erro pode ocorrer durante o processo de registro de usuários quando o sistema tenta enviar o email de ativação. Causas comuns e soluções:
+
+1. **Problemas com configuração de email**:
+   - Verifique se as configurações de email no `settings.py` estão corretas:
+   ```python
+   EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+   EMAIL_HOST = os.getenv('EMAIL_HOST', 'mail.example.com')
+   EMAIL_PORT = int(os.getenv('EMAIL_PORT', 465))
+   EMAIL_USE_TLS = False
+   EMAIL_USE_SSL = True
+   EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'user@example.com')
+   EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'password')
+   DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'user@example.com')
+   ```
+
+2. **Problemas com o servidor SMTP**:
+   - Verifique se o servidor SMTP está acessível a partir do servidor:
+   ```bash
+   # Teste a conexão com o servidor SMTP
+   telnet mail.example.com 465
+   ```
+
+3. **Tratamento de erros no envio de email**:
+   - Certifique-se de que a view `UserRegistrationView` em `core/views.py` tem tratamento adequado de erros:
+   ```python
+   try:
+       # Código para enviar email
+       send_mail(...)
+   except Exception as e:
+       # Registrar o erro, mas não impedir o registro
+       logger.error(f"Erro ao enviar email de ativação: {str(e)}")
+       # Ativar o usuário mesmo sem o email
+       user.is_active = True
+       user.save()
+   ```
+
+4. **Permissões de arquivo para templates de email**:
+   - Verifique se os templates de email têm as permissões corretas:
+   ```bash
+   sudo chown -R www-data:www-data /var/www/contabil/templates/core/email
+   sudo chmod -R 644 /var/www/contabil/templates/core/email/*.html
+   ```
+
+5. **Verificar logs para erros específicos**:
+   ```bash
+   grep "email" /var/log/contabil_err.log
+   grep "send_mail" /var/www/contabil/logs/debug.log
    ```
 
 ### Erro ao Fazer Pull

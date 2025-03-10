@@ -652,11 +652,53 @@ class FiscalYearCloseView(LoginRequiredMixin, FormView):
 class UserRegistrationView(FormView):
     template_name = 'core/register.html'
     form_class = UserRegistrationForm
-    success_url = reverse_lazy('login')
+    success_url = reverse_lazy('registration_done')
     
     def form_valid(self, form):
-        user = form.save()
-        login(self.request, user)
+        user = form.save(commit=False)
+        user.is_active = False  # Desativar o usuário até que ele confirme o email
+        user.save()
+        
+        # Criar token de ativação
+        token = UserActivationToken.objects.create(user=user)
+        
+        # Enviar email de ativação
+        try:
+            activation_url = self.request.build_absolute_uri(
+                reverse('activate_account', kwargs={'token': token.token})
+            )
+            
+            context = {
+                'user': user,
+                'activation_url': activation_url,
+                'valid_days': settings.ACCOUNT_ACTIVATION_DAYS,
+            }
+            
+            html_message = render_to_string('core/email/activation_email.html', context)
+            plain_message = strip_tags(html_message)
+            
+            send_mail(
+                subject='Ative sua conta no Sistema Contábil Estudos',
+                message=plain_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                html_message=html_message,
+                fail_silently=False,
+            )
+            
+            logger.info(f"Email de ativação enviado para {user.email}")
+            
+        except Exception as e:
+            # Registrar o erro, mas não impedir o registro
+            logger.error(f"Erro ao enviar email de ativação: {str(e)}")
+            # Ativar o usuário mesmo sem o email
+            user.is_active = True
+            user.save()
+            if token:
+                token.delete()
+            
+            messages.warning(self.request, _('Sua conta foi criada, mas não foi possível enviar o email de ativação. Entre em contato com o suporte.'))
+        
         return super().form_valid(form)
 
 class AboutView(TemplateView):

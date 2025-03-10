@@ -49,16 +49,16 @@
         
         <p>Olá {{ user.first_name }},</p>
         
-        <p>Obrigado por se registrar no Sistema Contábil. Para ativar sua conta, por favor clique no botão abaixo:</p>
+        <p>Obrigado por se registrar no Sistema Contábil Estudos. Para ativar sua conta, por favor clique no botão abaixo:</p>
         
         <div style="text-align: center;">
-            <a href="{{ activation_link }}" class="button">Ativar minha conta</a>
+            <a href="{{ activation_url }}" class="button">Ativar minha conta</a>
         </div>
         
         <p>Ou copie e cole o link abaixo no seu navegador:</p>
-        <p>{{ activation_link }}</p>
+        <p>{{ activation_url }}</p>
         
-        <p>Este link é válido por {{ expiration_days }} dias.</p>
+        <p>Este link é válido por {{ valid_days }} dias.</p>
         
         <p>Se você não solicitou este registro, por favor ignore este email.</p>
         
