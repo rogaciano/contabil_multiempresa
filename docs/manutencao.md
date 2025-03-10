@@ -322,3 +322,12 @@ Após isso, você pode executar a atualização com um único comando:
 ```bash
 sudo /var/www/contabil/scripts/update.sh
 ```
+
+
+Apos o 
+git reset --hard origin/main
+git pull
+
+sudo touch /var/www/contabil/debug.log
+sudo chown www-data:www-data /var/www/contabil/debug.log
+sudo chmod 644 /var/www/contabil/debug.log

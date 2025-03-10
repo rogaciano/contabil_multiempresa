@@ -16,6 +16,7 @@ from django.contrib.auth import login
 from django.utils.translation import gettext as _
 import logging
 import datetime
+from django.db import transaction
 
 logger = logging.getLogger(__name__)
 
@@ -439,7 +440,8 @@ class FiscalYearCreateView(LoginRequiredMixin, CreateView):
     def get_initial(self):
         initial = super().get_initial()
         current_year = datetime.date.today().year
-        initial['year'] = current_year
+        # Não preenchemos o ano automaticamente, apenas as datas
+        # initial['year'] = current_year
         initial['start_date'] = datetime.date(current_year, 1, 1)
         initial['end_date'] = datetime.date(current_year, 12, 31)
         return initial

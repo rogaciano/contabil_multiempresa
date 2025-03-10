@@ -22,7 +22,8 @@ class FiscalYearForm(forms.ModelForm):
         # Definir valores padrão para o ano fiscal
         if not self.instance.pk and not self.initial.get('year'):
             current_year = datetime.date.today().year
-            self.initial['year'] = current_year
+            # Não definimos o ano automaticamente, apenas as datas
+            # self.initial['year'] = current_year
             self.initial['start_date'] = datetime.date(current_year, 1, 1)
             self.initial['end_date'] = datetime.date(current_year, 12, 31)
     
