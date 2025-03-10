@@ -382,3 +382,7 @@ git pull
 sudo touch /var/www/contabil/debug.log
 sudo chown www-data:www-data /var/www/contabil/debug.log
 sudo chmod 644 /var/www/contabil/debug.log
+
+sudo supervisorctl restart contabil
+
+sudo supervisorctl status contabil

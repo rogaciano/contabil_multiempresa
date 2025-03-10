@@ -707,6 +707,27 @@ class AboutView(TemplateView):
 class RegistrationDoneView(TemplateView):
     template_name = 'core/registration_done.html'
 
+class CustomLoginView(LoginView):
+    template_name = 'core/login.html'
+    
+    def form_invalid(self, form):
+        """
+        Verifica se o erro é devido a uma conta inativa e adiciona uma mensagem específica.
+        """
+        username = form.data.get('username')
+        if username:
+            try:
+                user = User.objects.get(username=username)
+                if not user.is_active:
+                    messages.error(
+                        self.request, 
+                        _('Esta conta ainda não foi ativada. Por favor, verifique seu email para o link de ativação ou entre em contato com o suporte.')
+                    )
+            except User.DoesNotExist:
+                # Não fazemos nada aqui, deixamos o formulário mostrar o erro padrão
+                pass
+        return super().form_invalid(form)
+
 def activate_account(request, token):
     try:
         activation_token = UserActivationToken.objects.get(token=token)

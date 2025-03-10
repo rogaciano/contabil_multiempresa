@@ -1,5 +1,5 @@
 from django.urls import path
-from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth.views import LogoutView
 from django.contrib.auth.decorators import login_required
 from . import views
 
@@ -29,7 +29,7 @@ urlpatterns = [
     path('fiscal-year/<int:pk>/close/', login_required(views.FiscalYearCloseView.as_view()), name='fiscal_year_close'),
     
     # Autenticação e Registro
-    path('login/', LoginView.as_view(template_name='core/login.html'), name='login'),
+    path('login/', views.CustomLoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
     path('register/', views.UserRegistrationView.as_view(), name='register'),
     path('registration-done/', views.RegistrationDoneView.as_view(), name='registration_done'),
