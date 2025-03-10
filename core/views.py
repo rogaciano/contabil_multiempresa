@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, FormView, TemplateView
 from django.urls import reverse_lazy, reverse
 from django.contrib import messages
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 from accounts.models import Account, UserProfile, Company
 from transactions.models import Transaction
-from .models import FiscalYear, UserActivationToken
+from .models import FiscalYear, UserActivationToken, AccessLog
 from .forms import FiscalYearForm, FiscalYearCloseForm, UserRegistrationForm
 
 import uuid
@@ -846,3 +846,34 @@ class MaintenanceView(DocumentationView):
     
     def get_doc_page(self):
         return "maintenance"
+
+class AccessLogListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    model = AccessLog
+    template_name = 'core/access_log_list.html'
+    context_object_name = 'access_logs'
+    paginate_by = 20
+    
+    def test_func(self):
+        # Apenas administradores podem ver os logs de acesso
+        return self.request.user.is_superuser
+    
+    def get_queryset(self):
+        # Ordenar por data/hora decrescente (mais recentes primeiro)
+        return AccessLog.objects.all().select_related('user').order_by('-timestamp')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = _('Logs de Acesso ao Sistema')
+        context['subtitle'] = _('Registro de acessos dos usuários')
+        
+        # Estatísticas gerais
+        context['total_logs'] = AccessLog.objects.count()
+        context['unique_users'] = AccessLog.objects.values('user').distinct().count()
+        
+        # Logs por usuário (top 5)
+        user_logs = AccessLog.objects.values('user__username').annotate(
+            count=Count('id')
+        ).order_by('-count')[:5]
+        context['user_logs'] = user_logs
+        
+        return context

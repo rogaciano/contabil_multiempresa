@@ -1,5 +1,7 @@
 from django.contrib.auth.models import AnonymousUser
-from accounts.models import Company
+from accounts.models import Company, Account
+from core.models import AccessLog, FiscalYear
+from django.db.models import Count
 import logging
 
 logger = logging.getLogger(__name__)
@@ -102,3 +104,51 @@ class CurrentCompanyMiddleware:
         
         # Código executado para cada requisição após a view
         return response
+
+class AccessLogMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # Processa a requisição
+        response = self.get_response(request)
+        
+        # Após a resposta ser gerada, registra o acesso (apenas para páginas HTML, não para recursos estáticos)
+        if request.user.is_authenticated and not isinstance(request.user, AnonymousUser):
+            # Verifica se é uma requisição de página (não recursos estáticos ou AJAX)
+            if response.get('Content-Type', '').startswith('text/html'):
+                try:
+                    # Coleta estatísticas
+                    account_count = Account.objects.count()
+                    company_count = Company.objects.count()
+                    fiscal_year_count = FiscalYear.objects.count()
+                    
+                    # Importa Transaction apenas se necessário para evitar dependência circular
+                    from transactions.models import Transaction
+                    transaction_count = Transaction.objects.count()
+                    
+                    # Registra o acesso
+                    AccessLog.objects.create(
+                        user=request.user,
+                        ip_address=self.get_client_ip(request),
+                        user_agent=request.META.get('HTTP_USER_AGENT', ''),
+                        account_count=account_count,
+                        company_count=company_count,
+                        fiscal_year_count=fiscal_year_count,
+                        transaction_count=transaction_count
+                    )
+                    logger.debug(f"Acesso registrado para o usuário {request.user.username}")
+                except Exception as e:
+                    # Não deve impedir o funcionamento normal do sistema
+                    logger.error(f"Erro ao registrar acesso: {str(e)}")
+        
+        return response
+    
+    def get_client_ip(self, request):
+        """Obtém o IP real do cliente, mesmo atrás de proxies"""
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip

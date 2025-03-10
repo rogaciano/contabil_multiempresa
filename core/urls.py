@@ -34,4 +34,7 @@ urlpatterns = [
     path('register/', views.UserRegistrationView.as_view(), name='register'),
     path('registration-done/', views.RegistrationDoneView.as_view(), name='registration_done'),
     path('activate/<uuid:token>/', views.activate_account, name='activate_account'),
+    
+    # Logs de Acesso (apenas para administradores)
+    path('access-logs/', views.AccessLogListView.as_view(), name='access_log_list'),
 ]

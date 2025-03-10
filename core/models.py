@@ -55,3 +55,26 @@ class UserActivationToken(models.Model):
             # Token válido por 7 dias
             self.expires_at = timezone.now() + timezone.timedelta(days=7)
         super().save(*args, **kwargs)
+
+class AccessLog(models.Model):
+    user = models.ForeignKey(
+        User,
+        verbose_name=_('Usuário'),
+        on_delete=models.CASCADE,
+        related_name='access_logs'
+    )
+    timestamp = models.DateTimeField(_('Data/Hora'), auto_now_add=True)
+    ip_address = models.GenericIPAddressField(_('Endereço IP'), null=True, blank=True)
+    user_agent = models.TextField(_('User Agent'), null=True, blank=True)
+    account_count = models.IntegerField(_('Qtd. Contas'), default=0)
+    company_count = models.IntegerField(_('Qtd. Empresas'), default=0)
+    fiscal_year_count = models.IntegerField(_('Qtd. Anos Fiscais'), default=0)
+    transaction_count = models.IntegerField(_('Qtd. Lançamentos'), default=0)
+    
+    class Meta:
+        ordering = ['-timestamp']
+        verbose_name = _('Log de Acesso')
+        verbose_name_plural = _('Logs de Acesso')
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.timestamp.strftime('%d/%m/%Y %H:%M:%S')}"
