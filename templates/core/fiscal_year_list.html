@@ -14,7 +14,8 @@
     </div>
 
     {% if fiscal_years %}
-        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <!-- Versão para desktop -->
+        <div class="hidden md:block bg-white shadow-md rounded-lg overflow-hidden">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
@@ -39,24 +40,24 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-green-600">{{ item.total_revenue|currency }}</div>
+                                <div class="text-sm text-gray-500">{{ item.revenue|currency }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-red-600">{{ item.total_expenses|currency }}</div>
+                                <div class="text-sm text-gray-500">{{ item.expenses|currency }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium {% if item.result >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                                <div class="text-sm {% if item.result >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
                                     {{ item.result|currency }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 {% if item.fiscal_year.is_closed %}
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                        Fechado
+                                        Encerrado
                                     </span>
                                 {% else %}
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                        Aberto
+                                        Ativo
                                     </span>
                                 {% endif %}
                             </td>
@@ -65,10 +66,7 @@
                                     <i class="fas fa-eye"></i>
                                 </a>
                                 {% if not item.fiscal_year.is_closed %}
-                                    <a href="{% url 'fiscal_year_edit' item.fiscal_year.id %}" class="text-indigo-600 hover:text-indigo-900 mr-3">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a href="{% url 'fiscal_year_close' item.fiscal_year.id %}" class="text-red-600 hover:text-red-900">
+                                    <a href="{% url 'fiscal_year_close' item.fiscal_year.id %}" class="text-orange-600 hover:text-orange-900 mr-3">
                                         <i class="fas fa-lock"></i>
                                     </a>
                                 {% endif %}
@@ -77,6 +75,67 @@
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+        
+        <!-- Versão para dispositivos móveis -->
+        <div class="md:hidden space-y-4">
+            {% for item in fiscal_years_with_stats %}
+                <div class="bg-white shadow rounded-lg overflow-hidden">
+                    <div class="px-4 py-3 bg-gray-50 border-b flex justify-between items-center">
+                        <div class="font-medium">
+                            <span class="text-lg">{{ item.fiscal_year.year }}</span>
+                        </div>
+                        <div>
+                            {% if item.fiscal_year.is_closed %}
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                    Encerrado
+                                </span>
+                            {% else %}
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Ativo
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="p-4">
+                        <div class="grid grid-cols-2 gap-4 mb-3">
+                            <div>
+                                <p class="text-xs text-gray-500 mb-1">Período</p>
+                                <p class="text-sm">{{ item.fiscal_year.start_date|date:"d/m/Y" }} - {{ item.fiscal_year.end_date|date:"d/m/Y" }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 mb-1">Resultado</p>
+                                <p class="text-sm font-medium {% if item.result >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                                    {{ item.result|currency }}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 mb-3">
+                            <div>
+                                <p class="text-xs text-gray-500 mb-1">Receitas</p>
+                                <p class="text-sm text-gray-700">{{ item.revenue|currency }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 mb-1">Despesas</p>
+                                <p class="text-sm text-gray-700">{{ item.expenses|currency }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3 pt-3 border-t flex justify-end space-x-3">
+                            <a href="{% url 'fiscal_year_detail' item.fiscal_year.id %}" class="text-blue-600 hover:text-blue-900">
+                                <i class="fas fa-eye mr-1"></i> Detalhes
+                            </a>
+                            {% if not item.fiscal_year.is_closed %}
+                                <a href="{% url 'fiscal_year_close' item.fiscal_year.id %}" class="text-orange-600 hover:text-orange-900">
+                                    <i class="fas fa-lock mr-1"></i> Encerrar
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
         </div>
     {% else %}
         <div class="bg-white shadow-md rounded-lg p-6 text-center">
