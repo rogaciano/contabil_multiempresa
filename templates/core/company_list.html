@@ -59,7 +59,7 @@
                                 <a href="{% url 'company_detail' company.id %}" class="text-blue-600 hover:text-blue-900 mr-3">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <a href="{% url 'company_update' company.id %}" class="text-indigo-600 hover:text-indigo-900 mr-3">
+                                <a href="{% url 'company_edit' company.id %}" class="text-indigo-600 hover:text-indigo-900 mr-3">
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 <form method="get" action="{% url 'company_delete' company.id %}" class="inline">

@@ -581,47 +581,15 @@ class FiscalYearCloseView(LoginRequiredMixin, FormView):
 class UserRegistrationView(FormView):
     template_name = 'core/register.html'
     form_class = UserRegistrationForm
-    success_url = reverse_lazy('registration_done')
+    success_url = reverse_lazy('login')
     
     def form_valid(self, form):
-        user = form.save(commit=False)
-        user.is_active = False
-        user.save()
-        
-        # Criar perfil de usuário
-        UserProfile.objects.create(user=user)
-        
-        # Criar token de ativação
-        token = UserActivationToken.objects.create(user=user)
-        
-        # Enviar e-mail de ativação
-        self.send_activation_email(user, token)
-        
+        user = form.save()
+        login(self.request, user)
         return super().form_valid(form)
-    
-    def send_activation_email(self, user, token):
-        subject = _('Ative sua conta no Sistema Contábil')
-        activation_link = self.request.build_absolute_uri(
-            reverse('activate_account', kwargs={'token': token.token})
-        )
-        
-        context = {
-            'user': user,
-            'activation_link': activation_link,
-            'expiration_days': 7,
-        }
-        
-        html_message = render_to_string('core/email/activation_email.html', context)
-        plain_message = strip_tags(html_message)
-        
-        send_mail(
-            subject,
-            plain_message,
-            settings.DEFAULT_FROM_EMAIL,
-            [user.email],
-            html_message=html_message,
-            fail_silently=False,
-        )
+
+class AboutView(TemplateView):
+    template_name = 'core/about.html'
 
 class RegistrationDoneView(TemplateView):
     template_name = 'core/registration_done.html'

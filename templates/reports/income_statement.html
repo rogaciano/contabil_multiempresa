@@ -52,7 +52,7 @@
                 <div class="flex justify-between items-center {% if account.level > 1 %}pl-{{ account.level|add:"-1" }}{% endif %}">
                     <span class="{% if account.is_leaf %}font-normal{% else %}font-semibold{% endif %}">
                         {% if account.is_leaf %}
-                        <a href="{% url 'general_ledger' %}?account={{ account.id }}&start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}" 
+                        <a href="#" 
                            class="text-blue-600 hover:text-blue-800 hover:underline">
                             {{ account.code }} - {{ account.name }}
                         </a>
@@ -83,7 +83,7 @@
                 <div class="flex justify-between items-center {% if account.level > 1 %}pl-{{ account.level|add:"-1" }}{% endif %}">
                     <span class="{% if account.is_leaf %}font-normal{% else %}font-semibold{% endif %}">
                         {% if account.is_leaf %}
-                        <a href="{% url 'general_ledger' %}?account={{ account.id }}&start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}" 
+                        <a href="#" 
                            class="text-blue-600 hover:text-blue-800 hover:underline">
                             {{ account.code }} - {{ account.name }}
                         </a>
@@ -122,7 +122,7 @@
                 <div class="flex justify-between items-center {% if account.level > 1 %}pl-{{ account.level|add:"-1" }}{% endif %}">
                     <span class="{% if account.is_leaf %}font-normal{% else %}font-semibold{% endif %}">
                         {% if account.is_leaf %}
-                        <a href="{% url 'general_ledger' %}?account={{ account.id }}&start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}" 
+                        <a href="#" 
                            class="text-blue-600 hover:text-blue-800 hover:underline">
                             {{ account.code }} - {{ account.name }}
                         </a>
