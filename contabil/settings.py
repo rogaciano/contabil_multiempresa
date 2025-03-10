@@ -154,6 +154,12 @@ CACHES = {
     }
 }
 
+# Configurações do Django Select2
+SELECT2_CACHE_BACKEND = 'select2'
+SELECT2_JS = 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js'
+SELECT2_CSS = 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css'
+SELECT2_MINIMUM_INPUT_LENGTH = 0  # Permitir busca com qualquer quantidade de caracteres
+
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -209,8 +215,10 @@ LOGGING = {
         },
         'file': {
             'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'debug.log'),
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join('/var/log/contabil', 'django-debug.log') if not DEBUG else os.path.join(BASE_DIR, 'debug.log'),
+            'maxBytes': 10485760,  # 10MB
+            'backupCount': 5,
             'formatter': 'verbose',
         },
     },
@@ -225,11 +233,10 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
+        'core': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
     },
 }
-
-# Configurações do Django Select2
-SELECT2_CACHE_BACKEND = 'select2'
-SELECT2_JS = 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js'
-SELECT2_CSS = 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css'
-SELECT2_MINIMUM_INPUT_LENGTH = 0  # Permitir busca com qualquer quantidade de caracteres

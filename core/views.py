@@ -13,6 +13,7 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
 from django.contrib.auth import login
+from django.contrib.auth.views import LoginView
 from django.utils.translation import gettext as _
 import logging
 import datetime
@@ -665,7 +666,7 @@ class UserRegistrationView(FormView):
         # Enviar email de ativação
         try:
             activation_url = self.request.build_absolute_uri(
-                reverse('activate_account', kwargs={'token': token.token})
+                reverse('activate_account', kwargs={'token': str(token.token)})
             )
             
             context = {
@@ -717,12 +718,18 @@ class CustomLoginView(LoginView):
         username = form.data.get('username')
         if username:
             try:
-                user = User.objects.get(username=username)
+                # Tenta encontrar o usuário pelo email, já que o username pode ser o email
+                try:
+                    user = User.objects.get(email=username)
+                except User.DoesNotExist:
+                    user = User.objects.get(username=username)
+                
                 if not user.is_active:
                     messages.error(
                         self.request, 
                         _('Esta conta ainda não foi ativada. Por favor, verifique seu email para o link de ativação ou entre em contato com o suporte.')
                     )
+                    logger.info(f"Tentativa de login com conta inativa: {username}")
             except User.DoesNotExist:
                 # Não fazemos nada aqui, deixamos o formulário mostrar o erro padrão
                 pass
