@@ -3,55 +3,46 @@
 {% block title %}Lista de Contas - Sistema Contábil{% endblock %}
 
 {% block content %}
-<div class="bg-white shadow rounded-lg p-6">
-    <div class="flex justify-between items-center mb-6">
+<div class="bg-white shadow rounded-lg p-4 sm:p-6">
+    <!-- Título centralizado para mobile, alinhado à esquerda para desktop -->
+    <div class="text-center sm:text-left mb-4">
         <h2 class="text-2xl font-bold">Lista de Contas</h2>
-        <div class="flex space-x-2">
-            <a href="{% url 'ai_account_plan_generator' %}" class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                <i class="fas fa-robot mr-1"></i>
-                Gerar com IA
-            </a>
-            <a href="{% url 'account_chart' %}" class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-                Plano de Contas
-            </a>
-            <a href="{% url 'account_import' %}" class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                </svg>
-                Importar
-            </a>
-            <a href="{% url 'account_export' %}" class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                Exportar
-            </a>
-            <a href="{% url 'account_create' %}" class="inline-flex items-center px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                Nova Conta
-            </a>
-        </div>
+    </div>
+    
+    <!-- Botões reorganizados em grid para mobile -->
+    <div class="grid grid-cols-2 sm:flex sm:justify-end gap-2 sm:space-x-2 mb-6">
+        <a href="{% url 'ai_account_plan_generator' %}" class="flex justify-center items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <i class="fas fa-robot mr-1"></i>
+            Gerar com IA
+        </a>
+        <a href="{% url 'account_chart' %}" class="flex justify-center items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+            Plano de Contas
+        </a>
+        <a href="{% url 'account_create' %}" class="flex justify-center items-center px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 col-span-2 sm:col-span-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Nova Conta
+        </a>
     </div>
     
     <!-- Formulário de pesquisa -->
     <div class="mb-6">
-        <form method="get" action="{% url 'account_list' %}" class="flex space-x-4">
+        <form method="get" action="{% url 'account_list' %}" class="flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0">
             <div class="flex-grow">
-                <div class="mt-1 flex rounded-md shadow-sm">
-                    <input type="text" name="search" id="search" value="{{ search_query }}" class="focus:ring-indigo-500 focus:border-indigo-500 flex-grow block w-full rounded-md sm:text-sm border-gray-300" placeholder="Pesquisar por código ou nome">
+                <div class="flex rounded-md shadow-sm">
+                    <input type="text" name="search" id="search" value="{{ search_query }}" class="focus:ring-indigo-500 focus:border-indigo-500 flex-grow block w-full rounded-l-md sm:text-sm border-gray-300" placeholder="Pesquisar por código ou nome">
                     <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-r-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         Pesquisar
                     </button>
                 </div>
             </div>
             {% if search_query %}
-            <div>
-                <a href="{% url 'account_list' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <div class="sm:flex-shrink-0">
+                <a href="{% url 'account_list' %}" class="inline-flex justify-center w-full items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                     Limpar
                 </a>
             </div>
@@ -59,7 +50,8 @@
         </form>
     </div>
     
-    <div class="overflow-x-auto">
+    <!-- Tabela para desktop -->
+    <div class="hidden sm:block overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
@@ -104,6 +96,50 @@
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+    
+    <!-- Cards para mobile -->
+    <div class="sm:hidden space-y-4">
+        {% for account in object_list %}
+        <div class="bg-white border rounded-lg shadow-sm overflow-hidden">
+            <div class="p-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-medium text-indigo-600">{{ account.code }}</span>
+                    <span class="text-xs px-2 py-1 rounded-full bg-gray-100">{{ account.get_type_display }}</span>
+                </div>
+                <h3 class="mt-1 text-base font-semibold text-gray-900 truncate">{{ account.name }}</h3>
+                
+                <!-- Ações em formato de botões para mobile -->
+                <div class="mt-3 flex justify-between items-center">
+                    <div class="flex space-x-2">
+                        <a href="{% url 'account_update' account.pk %}" class="inline-flex items-center p-2 border border-transparent rounded-full text-indigo-600 bg-indigo-50 hover:bg-indigo-100">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'account_delete' account.pk %}" class="inline-flex items-center p-2 border border-transparent rounded-full text-red-600 bg-red-50 hover:bg-red-100">
+                            <i class="fas fa-trash-alt"></i>
+                        </a>
+                        {% if account.pk in accounts_with_transactions %}
+                            <span class="inline-flex items-center p-2 border border-transparent rounded-full text-gray-400 bg-gray-50 cursor-not-allowed" title="Não é possível criar contas filhas para contas que possuem lançamentos">
+                                <i class="fas fa-plus-circle"></i>
+                            </span>
+                        {% else %}
+                            <a href="{% url 'account_create_child' account.pk %}" class="inline-flex items-center p-2 border border-transparent rounded-full text-green-600 bg-green-50 hover:bg-green-100" title="Adicionar conta filha">
+                                <i class="fas fa-plus-circle"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="bg-white border rounded-lg p-6 text-center text-gray-500">
+            {% if search_query %}
+                Nenhuma conta encontrada para "{{ search_query }}"
+            {% else %}
+                Nenhuma conta cadastrada
+            {% endif %}
+        </div>
+        {% endfor %}
     </div>
 </div>
 {% endblock %}
