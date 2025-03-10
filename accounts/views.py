@@ -56,6 +56,18 @@ class AccountListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['account_types'] = AccountType.choices
         context['search_query'] = self.request.GET.get('search', '')
+        
+        # Identificar contas que possuem lançamentos
+        from transactions.models import Transaction
+        
+        # Contas usadas em transações de débito ou crédito
+        debit_accounts = set(Transaction.objects.values_list('debit_account_id', flat=True).distinct())
+        credit_accounts = set(Transaction.objects.values_list('credit_account_id', flat=True).distinct())
+        
+        # Unir os dois conjuntos
+        accounts_with_transactions = debit_accounts.union(credit_accounts)
+        context['accounts_with_transactions'] = accounts_with_transactions
+        
         return context
 
 class AccountDetailView(LoginRequiredMixin, DetailView):
@@ -614,3 +626,181 @@ class AccountTemplateDownloadView(LoginRequiredMixin, View):
             writer.writerow(['5', 'Despesas', 'X', '', 'Contas de Despesa', 'true'])
         
         return response
+
+class AccountCreateChildView(LoginRequiredMixin, CreateView):
+    model = Account
+    template_name = 'accounts/account_form.html'
+    form_class = AccountForm
+    success_url = reverse_lazy('account_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Passar o ID da empresa atual para o formulário
+        current_company_id = self.request.session.get('current_company_id')
+        if current_company_id:
+            kwargs['company_id'] = current_company_id
+        return kwargs
+    
+    def get_initial(self):
+        initial = super().get_initial()
+        parent_id = self.kwargs.get('pk')
+        
+        try:
+            parent = Account.objects.get(pk=parent_id)
+            
+            # Verificar se a conta pai possui lançamentos
+            from transactions.models import Transaction
+            has_transactions = Transaction.objects.filter(
+                Q(debit_account=parent) | Q(credit_account=parent)
+            ).exists()
+            
+            if has_transactions:
+                # Não permitir criar filhas para contas com lançamentos
+                # Esta validação será tratada no método get
+                return initial
+                
+            initial['parent'] = parent
+            initial['type'] = parent.type
+            
+            # Gerar o próximo código disponível
+            parent_code = parent.code
+            
+            # Buscar todas as contas filhas diretas deste pai
+            children = Account.objects.filter(
+                parent=parent,
+                company_id=self.request.session.get('current_company_id')
+            ).order_by('code')
+            
+            if not children.exists():
+                # Se não existem filhos, adicionar .01 ao código do pai
+                next_code = f"{parent_code}.01"
+            else:
+                # Encontrar o último código
+                last_child = children.last()
+                last_code = last_child.code
+                
+                # Separar o código por pontos
+                parts = last_code.split('.')
+                last_part = parts[-1]
+                
+                # Incrementar o último número
+                try:
+                    next_number = int(last_part) + 1
+                    # Formatar com zeros à esquerda para manter o padrão
+                    next_part = f"{next_number:02d}"
+                    
+                    # Substituir a última parte pelo novo número
+                    parts[-1] = next_part
+                    next_code = '.'.join(parts)
+                except ValueError:
+                    # Se não conseguir converter para número, apenas adiciona .01
+                    next_code = f"{parent_code}.01"
+            
+            initial['code'] = next_code
+            
+        except Account.DoesNotExist:
+            pass
+            
+        return initial
+    
+    def get(self, request, *args, **kwargs):
+        parent_id = self.kwargs.get('pk')
+        
+        try:
+            parent = Account.objects.get(pk=parent_id)
+            
+            # Verificar se a conta pai possui lançamentos
+            from transactions.models import Transaction
+            from django.db.models import Q
+            has_transactions = Transaction.objects.filter(
+                Q(debit_account=parent) | Q(credit_account=parent)
+            ).exists()
+            
+            if has_transactions:
+                messages.error(request, _('Não é possível criar contas filhas para contas que possuem lançamentos.'))
+                return redirect('account_list')
+                
+        except Account.DoesNotExist:
+            messages.error(request, _('Conta pai não encontrada.'))
+            return redirect('account_list')
+            
+        return super().get(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Adicionar a empresa atual ao contexto
+        current_company_id = self.request.session.get('current_company_id')
+        context['current_company_id'] = current_company_id
+        
+        # Adicionar informações sobre a conta pai
+        parent_id = self.kwargs.get('pk')
+        try:
+            parent = Account.objects.get(pk=parent_id)
+            context['parent_account'] = parent
+            context['form_title'] = f"Nova Conta Filha de: {parent.code} - {parent.name}"
+        except Account.DoesNotExist:
+            context['form_title'] = "Nova Conta"
+        
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        self.object = None
+        form = self.get_form()
+        
+        # Verificar se o usuário selecionou uma empresa
+        current_company_id = self.request.session.get('current_company_id')
+        if not current_company_id:
+            messages.error(self.request, _('Selecione uma empresa para criar uma conta.'))
+            return self.form_invalid(form)
+        
+        # Verificar se a conta pai possui lançamentos
+        parent_id = self.kwargs.get('pk')
+        try:
+            parent = Account.objects.get(pk=parent_id)
+            
+            from transactions.models import Transaction
+            from django.db.models import Q
+            has_transactions = Transaction.objects.filter(
+                Q(debit_account=parent) | Q(credit_account=parent)
+            ).exists()
+            
+            if has_transactions:
+                messages.error(self.request, _('Não é possível criar contas filhas para contas que possuem lançamentos.'))
+                return redirect('account_list')
+                
+        except Account.DoesNotExist:
+            messages.error(self.request, _('Conta pai não encontrada.'))
+            return redirect('account_list')
+        
+        # Definir a empresa da conta antes da validação
+        from .models import Company
+        try:
+            company = Company.objects.get(id=current_company_id)
+            form.instance.company = company
+            
+            # Definir a conta pai
+            form.instance.parent = parent
+            form.instance.type = parent.type  # Garantir que o tipo seja o mesmo do pai
+            
+            if form.is_valid():
+                try:
+                    return self.form_valid(form)
+                except Exception as e:
+                    # Capturar erro de unicidade (código de conta duplicado)
+                    from django.db import IntegrityError
+                    if isinstance(e, IntegrityError) and 'UNIQUE constraint failed: accounts_account.company_id, accounts_account.code' in str(e):
+                        form.add_error('code', _('Já existe uma conta com este código nesta empresa. Por favor, escolha um código diferente.'))
+                        messages.error(self.request, _('Erro ao criar conta: código já existe nesta empresa.'))
+                        return self.form_invalid(form)
+                    else:
+                        # Repassar outros erros
+                        raise
+            else:
+                return self.form_invalid(form)
+        except Company.DoesNotExist:
+            messages.error(self.request, _('Empresa não encontrada.'))
+            return self.form_invalid(form)
+    
+    def form_valid(self, form):
+        messages.success(self.request, _('Conta filha criada com sucesso!'))
+        return super().form_valid(form)

@@ -79,6 +79,16 @@
                         <a href="{% url 'account_update' account.pk %}" class="text-indigo-600 hover:text-indigo-900">Editar</a>
                         <span class="text-gray-300 mx-2">|</span>
                         <a href="{% url 'account_delete' account.pk %}" class="text-red-600 hover:text-red-900">Excluir</a>
+                        <span class="text-gray-300 mx-2">|</span>
+                        {% if account.pk in accounts_with_transactions %}
+                            <span class="text-gray-400 cursor-not-allowed" title="Não é possível criar contas filhas para contas que possuem lançamentos">
+                                <i class="fas fa-plus-circle"></i>
+                            </span>
+                        {% else %}
+                            <a href="{% url 'account_create_child' account.pk %}" class="text-green-600 hover:text-green-900" title="Adicionar conta filha">
+                                <i class="fas fa-plus-circle"></i>
+                            </a>
+                        {% endif %}
                     </td>
                 </tr>
                 {% empty %}

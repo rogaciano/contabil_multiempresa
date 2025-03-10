@@ -8,6 +8,7 @@ urlpatterns = [
     path('<int:pk>/', views.AccountDetailView.as_view(), name='account_detail'),
     path('<int:pk>/edit/', views.AccountUpdateView.as_view(), name='account_update'),
     path('<int:pk>/delete/', views.AccountDeleteView.as_view(), name='account_delete'),
+    path('<int:pk>/create-child/', views.AccountCreateChildView.as_view(), name='account_create_child'),
     path('chart/', views.AccountChartView.as_view(), name='account_chart'),
     path('import/', views.AccountImportView.as_view(), name='account_import'),
     path('export/', views.AccountExportView.as_view(), name='account_export'),

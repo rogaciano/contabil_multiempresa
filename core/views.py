@@ -15,6 +15,7 @@ from django.conf import settings
 from django.contrib.auth import login
 from django.utils.translation import gettext as _
 import logging
+import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,6 @@ from transactions.models import Transaction
 from .models import FiscalYear, UserActivationToken
 from .forms import FiscalYearForm, FiscalYearCloseForm, UserRegistrationForm
 
-import datetime
 import uuid
 
 class DashboardView(LoginRequiredMixin, TemplateView):
@@ -435,6 +435,14 @@ class FiscalYearCreateView(LoginRequiredMixin, CreateView):
         kwargs = super().get_form_kwargs()
         kwargs['company'] = getattr(self.request, 'current_company', None)
         return kwargs
+    
+    def get_initial(self):
+        initial = super().get_initial()
+        current_year = datetime.date.today().year
+        initial['year'] = current_year
+        initial['start_date'] = datetime.date(current_year, 1, 1)
+        initial['end_date'] = datetime.date(current_year, 12, 31)
+        return initial
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

@@ -1,11 +1,19 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{% if form.instance.pk %}Editar{% else %}Nova{% endif %} Conta - Sistema Contábil{% endblock %}
+{% block title %}{% if form.instance.pk %}Editar{% elif form_title %}{{ form_title }}{% else %}Nova Conta{% endif %} - Sistema Contábil{% endblock %}
 
 {% block content %}
 <div class="bg-white shadow rounded-lg p-6">
-    <h2 class="text-2xl font-bold mb-4">{% if form.instance.pk %}Editar{% else %}Nova{% endif %} Conta</h2>
+    <h2 class="text-2xl font-bold mb-4">{% if form.instance.pk %}Editar Conta{% elif form_title %}{{ form_title }}{% else %}Nova Conta{% endif %}</h2>
+    
+    {% if parent_account %}
+    <div class="mb-4 p-3 bg-gray-50 rounded-md">
+        <p class="text-sm text-gray-700">
+            <strong>Conta Pai:</strong> {{ parent_account.code }} - {{ parent_account.name }}
+        </p>
+    </div>
+    {% endif %}
     
     <form method="post" class="space-y-6">
         {% csrf_token %}

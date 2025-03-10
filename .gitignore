@@ -40,3 +40,39 @@ var/
 *.swp
 *.swo
 debug.log
+
+# Arquivos de log
+*.log
+logs/
+/var/log/
+log/
+
+# Arquivos temporários
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+temp/
+tmp/
+
+# Arquivos de backup
+*.bak
+*.backup
+*~
+*.old
+*.orig
+*.save
+
+# Arquivos específicos do Django
+staticfiles/
+local_settings.py
+*.pot
+
+# Arquivos de configuração local que podem variar por ambiente
+supervisor/*.conf
+nginx/*.conf
+gunicorn/*.conf
+
+# Arquivos de sessão
+*.session
+sessions/

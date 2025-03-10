@@ -16,7 +16,7 @@
         </div>
 
         <div class="bg-white shadow-md rounded-lg p-6">
-            <form method="post">
+            <form method="post" id="fiscal-year-form">
                 {% csrf_token %}
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -50,4 +50,21 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Só adicionar o evento se estiver na tela de criação (não na edição)
+        {% if not form.instance.pk %}
+            $("#id_year").on('change', function() {
+                var year = $(this).val();
+                if (year && !isNaN(year)) {
+                    $("#id_start_date").val(year + "-01-01");
+                    $("#id_end_date").val(year + "-12-31");
+                }
+            });
+        {% endif %}
+    });
+</script>
 {% endblock %}
