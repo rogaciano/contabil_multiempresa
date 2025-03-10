@@ -266,7 +266,7 @@
     <main class="main-content pt-16">
         <div class="content-wrapper p-6">
             <!-- Mensagens -->
-            {% if messages and request.resolver_match.url_name != 'login' %}
+            {% if messages %}
             <div class="mb-8">
                 {% for message in messages %}
                 <div class="rounded-md p-4 {% if message.tags == 'success' %}bg-green-50{% elif message.tags == 'error' %}bg-red-50{% else %}bg-blue-50{% endif %} mb-4">

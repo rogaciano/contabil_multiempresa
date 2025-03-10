@@ -15,22 +15,6 @@
         <form class="mt-8 space-y-6" method="post">
             {% csrf_token %}
             
-            {% if messages %}
-            <div class="mt-4">
-                {% for message in messages %}
-                    <div class="{% if message.tags == 'error' %}bg-red-100 border-l-4 border-red-500 text-red-700{% elif message.tags == 'success' %}bg-green-100 border-l-4 border-green-500 text-green-700{% else %}bg-blue-100 border-l-4 border-blue-500 text-blue-700{% endif %} p-4 mb-4" role="alert">
-                        <p>{{ message }}</p>
-                    </div>
-                {% endfor %}
-            </div>
-            {% elif form.errors %}
-            <div class="mt-4">
-                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
-                    <p>{% translate "Email ou senha incorretos. Por favor, tente novamente." %}</p>
-                </div>
-            </div>
-            {% endif %}
-            
             <div class="rounded-md shadow-sm -space-y-px">
                 <div>
                     <label for="username" class="sr-only">E-mail</label>
