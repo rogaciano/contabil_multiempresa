@@ -142,7 +142,7 @@ Para suporte técnico ou dúvidas sobre o sistema, entre em contato com:
 
 **Prof. Rogaciano da Paz**  
 Telefone: (81) 9 9921-6560  
-E-mail: [contato@rogacianodapaz.com.br](mailto:contato@rogacianodapaz.com.br)
+E-mail: [rogaciano@webpic.com.br](mailto:contato@rogacianodapaz.com.br)
 
 ---
 
