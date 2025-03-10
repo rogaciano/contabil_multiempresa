@@ -39,6 +39,14 @@
                     <p class="text-gray-500 text-sm">Transações</p>
                     <p class="text-2xl font-bold text-gray-800">{{ current_company.transactions.count|default:"0" }}</p>
                 </div>
+                <div class="border-r border-gray-200 pr-4">
+                    <p class="text-gray-500 text-sm">Empresas</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ total_companies|default:"0" }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-500 text-sm">Anos Fiscais</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ total_fiscal_years|default:"0" }}</p>
+                </div>
             </div>
         </div>
         
@@ -122,6 +130,102 @@
             </div>
         </div>
     </div>
+    
+    <!-- Índices Financeiros -->
+    {% if indices_financeiros %}
+    <h2 class="text-xl font-semibold text-gray-800 mb-4">Índices Financeiros</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Card de Índices de Liquidez -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <div class="flex items-center mb-4">
+                <div class="rounded-full bg-blue-100 p-3 mr-4">
+                    <i class="fas fa-tint text-blue-600 text-xl"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-800">Liquidez</h3>
+            </div>
+            <div class="space-y-4">
+                <div class="border-b pb-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 text-sm font-medium">Liquidez Corrente:</span>
+                        <span class="font-semibold text-lg {% if indices_financeiros.liquidez_corrente >= 1 %}text-green-600{% elif indices_financeiros.liquidez_corrente < 1 and indices_financeiros.liquidez_corrente != None %}text-red-600{% else %}text-gray-500{% endif %}">
+                            {% if indices_financeiros.liquidez_corrente != None %}{{ indices_financeiros.liquidez_corrente }}{% else %}N/A{% endif %}
+                        </span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Capacidade de pagamento de curto prazo</p>
+                </div>
+                <div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 text-sm font-medium">Liquidez Seca:</span>
+                        <span class="font-semibold text-lg {% if indices_financeiros.liquidez_seca >= 1 %}text-green-600{% elif indices_financeiros.liquidez_seca < 1 and indices_financeiros.liquidez_seca != None %}text-red-600{% else %}text-gray-500{% endif %}">
+                            {% if indices_financeiros.liquidez_seca != None %}{{ indices_financeiros.liquidez_seca }}{% else %}N/A{% endif %}
+                        </span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Liquidez sem considerar estoques</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Card de Índices de Endividamento -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <div class="flex items-center mb-4">
+                <div class="rounded-full bg-red-100 p-3 mr-4">
+                    <i class="fas fa-balance-scale text-red-600 text-xl"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-800">Endividamento</h3>
+            </div>
+            <div class="space-y-4">
+                <div class="border-b pb-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 text-sm font-medium">Grau de Endividamento:</span>
+                        <span class="font-semibold text-lg {% if indices_financeiros.grau_endividamento <= 50 %}text-green-600{% elif indices_financeiros.grau_endividamento > 100 %}text-red-600{% elif indices_financeiros.grau_endividamento > 50 %}text-yellow-600{% else %}text-gray-500{% endif %}">
+                            {% if indices_financeiros.grau_endividamento != None %}{{ indices_financeiros.grau_endividamento }}%{% else %}N/A{% endif %}
+                        </span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Relação entre passivo e patrimônio líquido</p>
+                </div>
+                <div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 text-sm font-medium">Composição do Endividamento:</span>
+                        <span class="font-semibold text-lg {% if indices_financeiros.composicao_endividamento <= 60 %}text-green-600{% elif indices_financeiros.composicao_endividamento > 80 %}text-red-600{% elif indices_financeiros.composicao_endividamento > 60 %}text-yellow-600{% else %}text-gray-500{% endif %}">
+                            {% if indices_financeiros.composicao_endividamento != None %}{{ indices_financeiros.composicao_endividamento }}%{% else %}N/A{% endif %}
+                        </span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Percentual de dívidas de curto prazo</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Card de Índices de Rentabilidade -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <div class="flex items-center mb-4">
+                <div class="rounded-full bg-green-100 p-3 mr-4">
+                    <i class="fas fa-chart-line text-green-600 text-xl"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-800">Rentabilidade</h3>
+            </div>
+            <div class="space-y-4">
+                <div class="border-b pb-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 text-sm font-medium">Margem Líquida:</span>
+                        <span class="font-semibold text-lg {% if indices_financeiros.margem_liquida > 10 %}text-green-600{% elif indices_financeiros.margem_liquida < 0 %}text-red-600{% elif indices_financeiros.margem_liquida >= 0 %}text-yellow-600{% else %}text-gray-500{% endif %}">
+                            {% if indices_financeiros.margem_liquida != None %}{{ indices_financeiros.margem_liquida }}%{% else %}N/A{% endif %}
+                        </span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Percentual de lucro sobre receitas</p>
+                </div>
+                <div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 text-sm font-medium">Retorno sobre PL:</span>
+                        <span class="font-semibold text-lg {% if indices_financeiros.retorno_pl > 15 %}text-green-600{% elif indices_financeiros.retorno_pl < 0 %}text-red-600{% elif indices_financeiros.retorno_pl >= 0 %}text-yellow-600{% else %}text-gray-500{% endif %}">
+                            {% if indices_financeiros.retorno_pl != None %}{{ indices_financeiros.retorno_pl }}%{% else %}N/A{% endif %}
+                        </span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Retorno sobre o capital investido</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
     
     <!-- Transações Recentes -->
     <div class="bg-white shadow rounded-lg p-6 mb-8">

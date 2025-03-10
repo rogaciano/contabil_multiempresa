@@ -210,6 +210,77 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 'fiscal_year_transactions_count': fiscal_year_transactions_count,
                 'total_revenue': total_revenue,
                 'total_expenses': total_expenses,
+                'total_companies': Company.objects.count(),  # Total de empresas no sistema
+                'total_fiscal_years': FiscalYear.objects.filter(company=company).count(),  # Total de anos fiscais da empresa atual
+            })
+            
+            # Calcular índices financeiros para o dashboard
+            # Obter contas para cálculo dos índices
+            contas_ativo_circulante = Account.objects.filter(
+                company=company.id, 
+                type='A',  # Ativo
+                code__startswith='1.1'  # Códigos que começam com 1.1 são ativos circulantes
+            )
+            
+            contas_ativo = Account.objects.filter(
+                company=company.id, 
+                type='A'  # Ativo
+            )
+            
+            contas_passivo_circulante = Account.objects.filter(
+                company=company.id, 
+                type='L',  # Passivo
+                code__startswith='2.1'  # Códigos que começam com 2.1 são passivos circulantes
+            )
+            
+            contas_passivo = Account.objects.filter(
+                company=company.id, 
+                type='L'  # Passivo
+            )
+            
+            contas_patrimonio_liquido = Account.objects.filter(
+                company=company.id, 
+                type='E'  # Patrimônio Líquido
+            )
+            
+            contas_estoque = Account.objects.filter(
+                company=company.id, 
+                type='A',  # Ativo
+                code__startswith='1.1',  # Ativo Circulante
+                name__icontains='estoque'  # Contas de estoque
+            )
+            
+            # Calcular saldos
+            ativo_circulante = sum(conta.get_balance(start_date=fiscal_year.start_date, end_date=fiscal_year.end_date) for conta in contas_ativo_circulante)
+            ativo_total = sum(conta.get_balance(start_date=fiscal_year.start_date, end_date=fiscal_year.end_date) for conta in contas_ativo)
+            passivo_circulante = sum(conta.get_balance(start_date=fiscal_year.start_date, end_date=fiscal_year.end_date) for conta in contas_passivo_circulante)
+            passivo_total = sum(conta.get_balance(start_date=fiscal_year.start_date, end_date=fiscal_year.end_date) for conta in contas_passivo)
+            patrimonio_liquido = sum(conta.get_balance(start_date=fiscal_year.start_date, end_date=fiscal_year.end_date) for conta in contas_patrimonio_liquido)
+            estoques = sum(conta.get_balance(start_date=fiscal_year.start_date, end_date=fiscal_year.end_date) for conta in contas_estoque)
+            
+            # Cálculo dos índices financeiros
+            # Índices de Liquidez
+            liquidez_corrente = round(ativo_circulante / passivo_circulante, 2) if passivo_circulante > 0 else None
+            liquidez_seca = round((ativo_circulante - estoques) / passivo_circulante, 2) if passivo_circulante > 0 else None
+            
+            # Índices de Endividamento
+            grau_endividamento = round(passivo_total / patrimonio_liquido * 100, 2) if patrimonio_liquido > 0 else None
+            composicao_endividamento = round(passivo_circulante / passivo_total * 100, 2) if passivo_total > 0 else None
+            
+            # Índices de Rentabilidade
+            margem_liquida = round((total_revenue - total_expenses) / total_revenue * 100, 2) if total_revenue > 0 else None
+            retorno_pl = round((total_revenue - total_expenses) / patrimonio_liquido * 100, 2) if patrimonio_liquido > 0 else None
+            
+            # Adicionar índices ao contexto
+            context.update({
+                'indices_financeiros': {
+                    'liquidez_corrente': liquidez_corrente,
+                    'liquidez_seca': liquidez_seca,
+                    'grau_endividamento': grau_endividamento,
+                    'composicao_endividamento': composicao_endividamento,
+                    'margem_liquida': margem_liquida,
+                    'retorno_pl': retorno_pl
+                }
             })
         else:
             messages.info(self.request, _('Por favor, crie um ano fiscal para começar.'))
@@ -646,3 +717,62 @@ def set_current_company(request):
                 messages.error(request, 'Você não tem acesso a esta empresa')
         
     return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
+
+class DocumentationView(TemplateView):
+    template_name = 'docs/base_docs.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['doc_title'] = self.get_doc_title()
+        context['doc_page'] = self.get_doc_page()
+        context['last_updated'] = self.get_last_updated()
+        return context
+    
+    def get_doc_title(self):
+        return "Documentação do Sistema"
+    
+    def get_doc_page(self):
+        return "overview"
+    
+    def get_last_updated(self):
+        return datetime.date.today()
+
+
+class OverviewView(DocumentationView):
+    template_name = 'docs/overview.html'
+    
+    def get_doc_title(self):
+        return "Visão Geral do Sistema"
+    
+    def get_doc_page(self):
+        return "overview"
+
+
+class VisualGuideView(DocumentationView):
+    template_name = 'docs/visual_guide.html'
+    
+    def get_doc_title(self):
+        return "Guia Visual do Sistema"
+    
+    def get_doc_page(self):
+        return "visual_guide"
+
+
+class ExamplesView(DocumentationView):
+    template_name = 'docs/examples.html'
+    
+    def get_doc_title(self):
+        return "Exemplos Práticos"
+    
+    def get_doc_page(self):
+        return "examples"
+
+
+class MaintenanceView(DocumentationView):
+    template_name = 'docs/maintenance.html'
+    
+    def get_doc_title(self):
+        return "Guia de Manutenção"
+    
+    def get_doc_page(self):
+        return "maintenance"

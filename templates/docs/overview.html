@@ -1,0 +1,187 @@
+{% extends 'docs/base_docs.html' %}
+
+{% block doc_content %}
+<h2 id="visao-geral">Visão Geral</h2>
+
+<p>O Sistema de Contabilidade Educacional é uma aplicação web desenvolvida para fins didáticos, destinada a auxiliar estudantes de contabilidade a compreender os conceitos fundamentais da contabilidade através de uma interface intuitiva e prática. Este sistema permite o gerenciamento completo de operações contábeis, incluindo múltiplas empresas, anos fiscais, plano de contas, lançamentos contábeis e geração de relatórios financeiros.</p>
+
+<h2 id="objetivo-educacional">Objetivo Educacional</h2>
+
+<p>Este sistema foi desenvolvido pelo Professor Rogaciano da Paz como uma ferramenta educacional para:</p>
+
+<ul>
+  <li>Facilitar o aprendizado prático de contabilidade</li>
+  <li>Demonstrar a aplicação dos princípios contábeis em um ambiente real</li>
+  <li>Permitir que os alunos pratiquem o registro e análise de transações contábeis</li>
+  <li>Visualizar como os relatórios financeiros são gerados a partir dos lançamentos contábeis</li>
+</ul>
+
+<h2 id="recursos-principais">Recursos Principais</h2>
+
+<h3 id="gerenciamento-de-multiplas-empresas">1. Gerenciamento de Múltiplas Empresas</h3>
+
+<p>O sistema permite a criação e gerenciamento de múltiplas empresas, possibilitando que os estudantes pratiquem a contabilidade em diferentes contextos empresariais.</p>
+
+<p><strong>Recursos:</strong></p>
+<ul>
+  <li>Cadastro de empresas com informações completas (nome, CNPJ, endereço, etc.)</li>
+  <li>Seleção da empresa ativa para trabalho</li>
+  <li>Visualização detalhada dos dados da empresa</li>
+</ul>
+
+<h3 id="gestao-de-anos-fiscais">2. Gestão de Anos Fiscais</h3>
+
+<p>O sistema implementa o conceito de anos fiscais, permitindo a organização cronológica das operações contábeis.</p>
+
+<p><strong>Recursos:</strong></p>
+<ul>
+  <li>Criação de anos fiscais com datas de início e fim</li>
+  <li>Fechamento de anos fiscais com transferência automática de saldos</li>
+  <li>Visualização do status de cada ano fiscal (aberto/fechado)</li>
+</ul>
+
+<h3 id="plano-de-contas-hierarquico">3. Plano de Contas Hierárquico</h3>
+
+<p>Um plano de contas completo e hierárquico permite a organização estruturada das contas contábeis.</p>
+
+<p><strong>Recursos:</strong></p>
+<ul>
+  <li>Estrutura hierárquica de contas (até 5 níveis)</li>
+  <li>Classificação por tipo (Ativo, Passivo, Patrimônio Líquido, Receita, Despesa)</li>
+  <li>Contas sintéticas (agrupamento) e analíticas (lançamentos)</li>
+  <li>Códigos de conta padronizados</li>
+</ul>
+
+<h3 id="lancamentos-contabeis">4. Lançamentos Contábeis</h3>
+
+<p>O sistema permite o registro de lançamentos contábeis completos, respeitando o princípio do débito e crédito.</p>
+
+<p><strong>Recursos:</strong></p>
+<ul>
+  <li>Lançamentos com múltiplas partidas</li>
+  <li>Validação automática do equilíbrio entre débitos e créditos</li>
+  <li>Histórico detalhado para cada lançamento</li>
+  <li>Anexos de documentos comprobatórios</li>
+</ul>
+
+<h3 id="relatorios-financeiros">5. Relatórios Financeiros</h3>
+
+<p>Uma série de relatórios financeiros permite a análise da situação patrimonial e de resultados da empresa.</p>
+
+<p><strong>Relatórios disponíveis:</strong></p>
+<ul>
+  <li>Balanço Patrimonial</li>
+  <li>Demonstração do Resultado do Exercício (DRE)</li>
+  <li>Fluxo de Caixa</li>
+  <li>Balancete de Verificação</li>
+  <li>Razão Geral</li>
+</ul>
+
+<h3 id="painel-de-controle">6. Painel de Controle</h3>
+
+<p>Um dashboard interativo apresenta informações resumidas sobre a situação financeira da empresa.</p>
+
+<p><strong>Informações disponíveis:</strong></p>
+<ul>
+  <li>Resumo de ativos e passivos</li>
+  <li>Gráfico de receitas x despesas</li>
+  <li>Indicadores financeiros chave</li>
+  <li>Alertas sobre situações específicas</li>
+</ul>
+
+<h2 id="tecnologias-utilizadas">Tecnologias Utilizadas</h2>
+
+<p>O sistema foi desenvolvido utilizando tecnologias modernas de desenvolvimento web:</p>
+
+<ul>
+  <li><strong>Backend</strong>: Django (Framework Python)</li>
+  <li><strong>Frontend</strong>: HTML5, CSS3, JavaScript</li>
+  <li><strong>Estilização</strong>: Tailwind CSS</li>
+  <li><strong>Interatividade</strong>: Alpine.js</li>
+  <li><strong>Banco de Dados</strong>: SQLite (desenvolvimento) / PostgreSQL (produção)</li>
+  <li><strong>Gráficos</strong>: Chart.js</li>
+  <li><strong>Relatórios PDF</strong>: xhtml2pdf</li>
+</ul>
+
+<h2 id="fluxo-de-trabalho-tipico">Fluxo de Trabalho Típico</h2>
+
+<ol>
+  <li><strong>Configuração Inicial</strong>:
+    <ul>
+      <li>Cadastro de uma nova empresa</li>
+      <li>Criação de um ano fiscal</li>
+      <li>Configuração do plano de contas</li>
+    </ul>
+  </li>
+  <li><strong>Operações Diárias</strong>:
+    <ul>
+      <li>Registro de lançamentos contábeis</li>
+      <li>Consulta de saldos de contas</li>
+      <li>Verificação de balancetes</li>
+    </ul>
+  </li>
+  <li><strong>Fechamento Mensal/Anual</strong>:
+    <ul>
+      <li>Geração de relatórios financeiros</li>
+      <li>Análise de resultados</li>
+      <li>Fechamento do período contábil</li>
+    </ul>
+  </li>
+</ol>
+
+<h2 id="exemplos-de-uso">Exemplos de Uso</h2>
+
+<h3 id="exemplo-1-registro-de-uma-venda-a-vista">Exemplo 1: Registro de uma Venda à Vista</h3>
+
+<ol>
+  <li>Acesse o sistema e selecione a empresa desejada</li>
+  <li>Navegue até "Lançamentos" e clique em "Novo Lançamento"</li>
+  <li>Preencha a data e o histórico: "Venda de mercadorias à vista"</li>
+  <li>Adicione as partidas:
+    <ul>
+      <li>Débito em "Caixa" (1.1.1.01) - R$ 1.000,00</li>
+      <li>Crédito em "Receita de Vendas" (3.1.1.01) - R$ 1.000,00</li>
+    </ul>
+  </li>
+  <li>Salve o lançamento</li>
+</ol>
+
+<h3 id="exemplo-2-geracao-de-um-balanco-patrimonial">Exemplo 2: Geração de um Balanço Patrimonial</h3>
+
+<ol>
+  <li>Acesse o sistema e selecione a empresa desejada</li>
+  <li>Navegue até "Relatórios" > "Balanço Patrimonial"</li>
+  <li>Selecione o período desejado (por exemplo, 01/01/2025 a 31/12/2025)</li>
+  <li>Clique em "Gerar Relatório"</li>
+  <li>Visualize o Balanço Patrimonial na tela ou exporte para PDF</li>
+</ol>
+
+<h2 id="beneficios-educacionais">Benefícios Educacionais</h2>
+
+<ul>
+  <li><strong>Aprendizado Prático</strong>: Os estudantes podem aplicar conceitos teóricos em um ambiente real</li>
+  <li><strong>Visualização Imediata</strong>: Os efeitos dos lançamentos são imediatamente visíveis nos relatórios</li>
+  <li><strong>Compreensão Sistêmica</strong>: Entendimento de como os diferentes elementos contábeis se relacionam</li>
+  <li><strong>Preparação Profissional</strong>: Familiarização com sistemas contábeis similares aos utilizados no mercado</li>
+</ul>
+
+<h2 id="requisitos-do-sistema">Requisitos do Sistema</h2>
+
+<ul>
+  <li>Navegador web moderno (Chrome, Firefox, Edge, Safari)</li>
+  <li>Conexão com a internet</li>
+  <li>Resolução de tela mínima de 1024x768</li>
+</ul>
+
+<h2 id="suporte-e-contato">Suporte e Contato</h2>
+
+<p>Para suporte técnico ou dúvidas sobre o sistema, entre em contato com:</p>
+
+<p><strong>Prof. Rogaciano da Paz</strong><br>
+Telefone: (81) 9 9921-6560<br>
+E-mail: <a href="mailto:contato@rogacianodapaz.com.br">contato@rogacianodapaz.com.br</a></p>
+
+<hr>
+
+<p><em>Este sistema é destinado exclusivamente para fins educacionais e não deve ser utilizado para contabilidade oficial ou fiscal de empresas reais sem as devidas adaptações e certificações.</em></p>
+{% endblock %}

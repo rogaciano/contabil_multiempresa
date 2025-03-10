@@ -1,0 +1,150 @@
+{% extends 'docs/base_docs.html' %}
+
+{% block doc_content %}
+<h1 id="guia-de-manutencao-do-sistema-contabil">Guia de Manutenção do Sistema Contábil</h1>
+
+<p>Este guia fornece instruções detalhadas para a manutenção e atualização do Sistema de Contabilidade Educacional, visando garantir seu funcionamento contínuo e estável.</p>
+
+<h2 id="processo-de-atualizacao">Processo de Atualização</h2>
+
+<ol>
+  <li><strong>Verificação de Alterações Pendentes</strong>
+    <ul>
+      <li>Antes de realizar o pull, verifique se há alterações locais que precisam ser commitadas</li>
+      <li>Execute <code>git status</code> para verificar o estado atual do repositório</li>
+    </ul>
+  </li>
+  <li><strong>Atualização do Código</strong>
+    <ul>
+      <li>Execute <code>git pull</code> para atualizar o código</li>
+      <li>Verifique se houve conflitos e resolva-os se necessário</li>
+    </ul>
+  </li>
+  <li><strong>Atualização de Dependências</strong>
+    <ul>
+      <li>Execute <code>pip install -r requirements.txt</code> para instalar/atualizar dependências</li>
+      <li>Verifique se há novas dependências no arquivo requirements.txt</li>
+    </ul>
+  </li>
+  <li><strong>Atualização de Arquivos Estáticos</strong>
+    <ul>
+      <li>Execute <code>python manage.py collectstatic --noinput</code></li>
+      <li>Verifique se o Nginx está configurado para servir arquivos estáticos</li>
+    </ul>
+  </li>
+  <li><strong>Aplicação de Migrações</strong>
+    <ul>
+      <li>Execute <code>python manage.py migrate</code></li>
+      <li>Verifique se todas as migrações foram aplicadas corretamente</li>
+    </ul>
+  </li>
+  <li><strong>Reinicialização do Serviço</strong>
+    <ul>
+      <li>Execute <code>sudo supervisorctl restart gunicorn</code></li>
+      <li>Verifique o status do serviço com <code>sudo supervisorctl status</code></li>
+    </ul>
+  </li>
+  <li><strong>Verificação de Logs</strong>
+    <ul>
+      <li>Verifique os logs do Gunicorn em <code>/var/log/contabil/gunicorn.log</code></li>
+      <li>Verifique os logs do Nginx em <code>/var/log/nginx/error.log</code></li>
+    </ul>
+  </li>
+</ol>
+
+<h2 id="solucao-de-problemas-comuns">Solução de Problemas Comuns</h2>
+
+<h3 id="problema-com-logs">Problema com Logs</h3>
+
+<p>Se o Django não consegue escrever no arquivo de log:</p>
+
+<ol>
+  <li>Verifique as permissões do diretório de logs:
+<pre><code>sudo chown -R www-data:www-data /var/log/contabil
+sudo chmod -R 755 /var/log/contabil</code></pre>
+  </li>
+  <li>Verifique se o arquivo de log existe e tem as permissões corretas:
+<pre><code>sudo touch /var/log/contabil/django-debug.log
+sudo chown www-data:www-data /var/log/contabil/django-debug.log
+sudo chmod 644 /var/log/contabil/django-debug.log</code></pre>
+  </li>
+</ol>
+
+<h3 id="gunicorn-nao-inicia">Gunicorn Não Inicia</h3>
+
+<p>Se o Gunicorn fica preso no estado "STARTING":</p>
+
+<ol>
+  <li>Verifique se a porta 8000 não está em uso:
+<pre><code>sudo lsof -i :8000</code></pre>
+  </li>
+  <li>Mata processos do Gunicorn que possam estar rodando:
+<pre><code>sudo pkill -f gunicorn</code></pre>
+  </li>
+  <li>Verifique as configurações do supervisor e do Nginx</li>
+</ol>
+
+<h3 id="erro-502-bad-gateway">Erro 502 Bad Gateway</h3>
+
+<p>Se o Nginx retorna erro 502:</p>
+
+<ol>
+  <li>Verifique se o Gunicorn está rodando:
+<pre><code>sudo supervisorctl status</code></pre>
+  </li>
+  <li>Verifique os logs do Gunicorn e do Nginx</li>
+  <li>Verifique as permissões dos arquivos estáticos</li>
+</ol>
+
+<h2 id="script-de-automacao">Script de Automação</h2>
+
+<p>Para facilitar o processo de atualização, crie um script de automação:</p>
+
+<pre><code>#!/bin/bash
+
+# Atualiza o código
+cd /home/usuario/contabil_windsurf
+git pull
+
+# Atualiza dependências
+pip install -r requirements.txt
+
+# Atualiza arquivos estáticos
+python manage.py collectstatic --noinput
+
+# Aplica migrações
+python manage.py migrate
+
+# Reinicia o serviço
+sudo supervisorctl restart gunicorn
+
+# Verifica status
+sudo supervisorctl status
+</code></pre>
+
+<p>Salve o script como <code>update.sh</code> e torne-o executável:</p>
+
+<pre><code>chmod +x update.sh
+</code></pre>
+
+<h2 id="dependencias-criticas">Dependências Críticas</h2>
+
+<p>Certifique-se de que as seguintes dependências estão instaladas:</p>
+
+<ul>
+  <li><code>whitenoise==6.6.0</code> - Para servir arquivos estáticos</li>
+  <li><code>xhtml2pdf</code> - Para geração de relatórios em PDF</li>
+</ul>
+
+<h2 id="contato-para-suporte">Contato para Suporte</h2>
+
+<p>Para suporte técnico ou dúvidas sobre manutenção, entre em contato com:</p>
+
+<p><strong>Prof. Rogaciano da Paz</strong><br>
+Telefone: (81) 9 9921-6560<br>
+E-mail: <a href="mailto:contato@rogacianodapaz.com.br">contato@rogacianodapaz.com.br</a></p>
+
+<hr>
+
+<p><em>Este guia de manutenção deve ser consultado sempre que forem realizadas atualizações no sistema ou quando ocorrerem problemas de funcionamento.</em></p>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Documentação - {{ doc_title }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex flex-col md:flex-row">
+        <!-- Sidebar de navegação -->
+        <div class="w-full md:w-1/4 mb-6 md:mb-0 md:pr-6">
+            <div class="bg-white rounded-lg shadow-md p-4 sticky top-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Documentação</h3>
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{% url 'docs_overview' %}" class="block px-3 py-2 rounded-lg {% if doc_page == 'overview' %}bg-blue-100 text-blue-700{% else %}hover:bg-gray-100{% endif %}">
+                            Visão Geral do Sistema
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'docs_visual_guide' %}" class="block px-3 py-2 rounded-lg {% if doc_page == 'visual_guide' %}bg-blue-100 text-blue-700{% else %}hover:bg-gray-100{% endif %}">
+                            Guia Visual
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'docs_examples' %}" class="block px-3 py-2 rounded-lg {% if doc_page == 'examples' %}bg-blue-100 text-blue-700{% else %}hover:bg-gray-100{% endif %}">
+                            Exemplos Práticos
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Conteúdo principal -->
+        <div class="w-full md:w-3/4">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h1 class="text-2xl font-bold text-gray-800 mb-6">{{ doc_title }}</h1>
+                
+                <div class="prose prose-blue max-w-none">
+                    {% block doc_content %}{% endblock %}
+                </div>
+                
+                <div class="mt-8 pt-4 border-t border-gray-200">
+                    <p class="text-sm text-gray-600">
+                        Última atualização: {{ last_updated|date:"d/m/Y" }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

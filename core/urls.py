@@ -5,6 +5,13 @@ from . import views
 
 urlpatterns = [
     path('', views.DashboardView.as_view(), name='dashboard'),
+    path('dashboard/', views.DashboardView.as_view(), name='dashboard'),
+    path('about/', views.AboutView.as_view(), name='about'),
+    
+    # Documentação
+    path('docs/', views.OverviewView.as_view(), name='docs_overview'),
+    path('docs/visual-guide/', views.VisualGuideView.as_view(), name='docs_visual_guide'),
+    path('docs/examples/', views.ExamplesView.as_view(), name='docs_examples'),
     
     # Empresas
     path('companies/', views.CompanyListView.as_view(), name='company_list'),
@@ -20,9 +27,6 @@ urlpatterns = [
     path('fiscal-year/<int:pk>/', views.FiscalYearDetailView.as_view(), name='fiscal_year_detail'),
     path('fiscal-year/<int:pk>/edit/', views.FiscalYearUpdateView.as_view(), name='fiscal_year_edit'),
     path('fiscal-year/<int:pk>/close/', login_required(views.FiscalYearCloseView.as_view()), name='fiscal_year_close'),
-    
-    # Sobre o Programa
-    path('about/', views.AboutView.as_view(), name='about'),
     
     # Autenticação e Registro
     path('login/', LoginView.as_view(template_name='core/login.html'), name='login'),

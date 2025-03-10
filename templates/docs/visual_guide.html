@@ -1,0 +1,214 @@
+{% extends 'docs/base_docs.html' %}
+
+{% block doc_content %}
+<h1 id="guia-visual-do-sistema-de-contabilidade-educacional">Guia Visual do Sistema de Contabilidade Educacional</h1>
+
+<p>Este guia visual complementa a documentação principal do sistema, fornecendo representações visuais dos principais componentes e fluxos de trabalho.</p>
+
+<h2 id="estrutura-do-sistema">Estrutura do Sistema</h2>
+
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│                        SISTEMA CONTÁBIL                         │
+│                                                                 │
+├───────────────┬───────────────┬───────────────┬────────────────┤
+│               │               │               │                │
+│   EMPRESAS    │  ANOS FISCAIS │  PLANO DE     │  LANÇAMENTOS   │
+│               │               │   CONTAS      │                │
+│               │               │               │                │
+├───────────────┴───────────────┴───────────────┴────────────────┤
+│                                                                 │
+│                          RELATÓRIOS                             │
+│                                                                 │
+├─────────────┬─────────────┬────────────┬──────────┬────────────┤
+│             │             │            │          │            │
+│   BALANÇO   │    DRE      │   FLUXO    │BALANCETE │   RAZÃO    │
+│ PATRIMONIAL │             │  DE CAIXA  │          │            │
+│             │             │            │          │            │
+└─────────────┴─────────────┴────────────┴──────────┴────────────┘
+</code></pre>
+
+<h2 id="ciclo-contabil">Ciclo Contábil</h2>
+
+<pre><code>┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│             │     │             │     │             │     │             │
+│  Cadastro   │────▶│ Lançamentos │────▶│ Verificação │────▶│ Relatórios  │
+│  Inicial    │     │  Contábeis  │     │ (Balancete) │     │ Financeiros │
+│             │     │             │     │             │     │             │
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+       │                                                           │
+       │                                                           │
+       └───────────────────────┐                 ┌─────────────────┘
+                               ▼                 ▼
+                         ┌─────────────────────────────┐
+                         │                             │
+                         │    Fechamento do Período    │
+                         │                             │
+                         └─────────────────────────────┘
+</code></pre>
+
+<h2 id="estrutura-de-contas-exemplo">Estrutura de Contas (Exemplo)</h2>
+
+<pre><code>1. ATIVO
+   1.1. ATIVO CIRCULANTE
+      1.1.1. Disponível
+         1.1.1.01. Caixa
+         1.1.1.02. Bancos Conta Movimento
+      1.1.2. Créditos
+         1.1.2.01. Clientes
+         1.1.2.02. (-) Provisão para Devedores Duvidosos
+   1.2. ATIVO NÃO CIRCULANTE
+      1.2.1. Realizável a Longo Prazo
+      1.2.2. Investimentos
+      1.2.3. Imobilizado
+         1.2.3.01. Móveis e Utensílios
+         1.2.3.02. (-) Depreciação Acumulada
+
+2. PASSIVO
+   2.1. PASSIVO CIRCULANTE
+      2.1.1. Fornecedores
+      2.1.2. Obrigações Trabalhistas
+   2.2. PASSIVO NÃO CIRCULANTE
+      2.2.1. Empréstimos e Financiamentos
+
+3. PATRIMÔNIO LÍQUIDO
+   3.1. Capital Social
+   3.2. Reservas
+   3.3. Lucros/Prejuízos Acumulados
+
+4. RECEITAS
+   4.1. Receitas Operacionais
+      4.1.1. Vendas de Mercadorias
+      4.1.2. Prestação de Serviços
+   4.2. Receitas Não Operacionais
+      4.2.1. Receitas Financeiras
+
+5. DESPESAS
+   5.1. Despesas Operacionais
+      5.1.1. Despesas Administrativas
+      5.1.2. Despesas com Vendas
+   5.2. Despesas Não Operacionais
+      5.2.1. Despesas Financeiras
+</code></pre>
+
+<h2 id="exemplo-de-lancamento-contabil">Exemplo de Lançamento Contábil</h2>
+
+<h3 id="compra-de-mercadorias-a-prazo">Compra de Mercadorias a Prazo</h3>
+
+<pre><code>┌───────────────────────────────────────────────────────────────────┐
+│ Data: 15/03/2025                                                  │
+│ Histórico: Compra de mercadorias a prazo conforme NF 12345        │
+├───────────────────────────────────────┬───────────┬───────────────┤
+│ Conta                                 │   Débito  │    Crédito    │
+├───────────────────────────────────────┼───────────┼───────────────┤
+│ 1.1.3.01 - Estoque de Mercadorias     │ 5.000,00  │               │
+│ 2.1.1.01 - Fornecedores               │           │    5.000,00   │
+└───────────────────────────────────────┴───────────┴───────────────┘
+</code></pre>
+
+<h2 id="exemplo-de-balanco-patrimonial">Exemplo de Balanço Patrimonial</h2>
+
+<pre><code>┌───────────────────────────────────────────────────────────────────┐
+│                       BALANÇO PATRIMONIAL                         │
+│                          31/12/2025                               │
+├───────────────────────────────┬───────────────────────────────────┤
+│ ATIVO                         │ PASSIVO                           │
+├───────────────────────────────┼───────────────────────────────────┤
+│ ATIVO CIRCULANTE      25.000  │ PASSIVO CIRCULANTE        15.000  │
+│   Caixa               10.000  │   Fornecedores            12.000  │
+│   Bancos               8.000  │   Obrigações Trabalhistas  3.000  │
+│   Clientes             7.000  │                                   │
+│                               │ PASSIVO NÃO CIRCULANTE    10.000  │
+│ ATIVO NÃO CIRCULANTE  35.000  │   Empréstimos             10.000  │
+│   Imobilizado         40.000  │                                   │
+│   (-) Depreciação     -5.000  │ PATRIMÔNIO LÍQUIDO        35.000  │
+│                               │   Capital Social          30.000  │
+│                               │   Lucros Acumulados        5.000  │
+├───────────────────────────────┼───────────────────────────────────┤
+│ TOTAL                 60.000  │ TOTAL                     60.000  │
+└───────────────────────────────┴───────────────────────────────────┘
+</code></pre>
+
+<h2 id="exemplo-de-dre-demonstracao-do-resultado-do-exercicio">Exemplo de DRE (Demonstração do Resultado do Exercício)</h2>
+
+<pre><code>┌───────────────────────────────────────────────────────────────────┐
+│                 DEMONSTRAÇÃO DO RESULTADO DO EXERCÍCIO            │
+│                    01/01/2025 a 31/12/2025                        │
+├───────────────────────────────────────────────────┬───────────────┤
+│ RECEITA BRUTA                                     │     50.000,00 │
+│   Vendas de Mercadorias                           │     40.000,00 │
+│   Prestação de Serviços                           │     10.000,00 │
+├───────────────────────────────────────────────────┼───────────────┤
+│ (-) DEDUÇÕES DA RECEITA                           │      5.000,00 │
+│   Impostos sobre Vendas                           │      5.000,00 │
+├───────────────────────────────────────────────────┼───────────────┤
+│ (=) RECEITA LÍQUIDA                               │     45.000,00 │
+├───────────────────────────────────────────────────┼───────────────┤
+│ (-) CUSTO DAS MERCADORIAS VENDIDAS                │     20.000,00 │
+├───────────────────────────────────────────────────┼───────────────┤
+│ (=) LUCRO BRUTO                                   │     25.000,00 │
+├───────────────────────────────────────────────────┼───────────────┤
+│ (-) DESPESAS OPERACIONAIS                         │     18.000,00 │
+│   Despesas Administrativas                        │     10.000,00 │
+│   Despesas com Vendas                             │      5.000,00 │
+│   Despesas Financeiras                            │      3.000,00 │
+├───────────────────────────────────────────────────┼───────────────┤
+│ (=) LUCRO OPERACIONAL                             │      7.000,00 │
+├───────────────────────────────────────────────────┼───────────────┤
+│ (+/-) RECEITAS/DESPESAS NÃO OPERACIONAIS          │      1.000,00 │
+├───────────────────────────────────────────────────┼───────────────┤
+│ (=) LUCRO ANTES DO IMPOSTO DE RENDA               │      8.000,00 │
+├───────────────────────────────────────────────────┼───────────────┤
+│ (-) PROVISÃO PARA IMPOSTO DE RENDA                │      3.000,00 │
+├───────────────────────────────────────────────────┼───────────────┤
+│ (=) LUCRO LÍQUIDO DO EXERCÍCIO                    │      5.000,00 │
+└───────────────────────────────────────────────────┴───────────────┘
+</code></pre>
+
+<h2 id="fluxo-de-trabalho-do-usuario">Fluxo de Trabalho do Usuário</h2>
+
+<ol>
+  <li><strong>Login no Sistema</strong>
+<pre><code>[Tela de Login] → [Dashboard Principal]</code></pre>
+  </li>
+  <li><strong>Seleção de Empresa</strong>
+<pre><code>[Lista de Empresas] → [Selecionar Empresa] → [Dashboard da Empresa]</code></pre>
+  </li>
+  <li><strong>Registro de Lançamento</strong>
+<pre><code>[Menu] → [Lançamentos] → [Novo Lançamento] → [Preencher Dados] → [Salvar]</code></pre>
+  </li>
+  <li><strong>Geração de Relatório</strong>
+<pre><code>[Menu] → [Relatórios] → [Selecionar Relatório] → [Definir Parâmetros] → [Gerar]</code></pre>
+  </li>
+  <li><strong>Fechamento de Ano Fiscal</strong>
+<pre><code>[Menu] → [Anos Fiscais] → [Selecionar Ano] → [Fechar Ano] → [Confirmar]</code></pre>
+  </li>
+</ol>
+
+<h2 id="recomendacoes-para-uso-educacional">Recomendações para Uso Educacional</h2>
+
+<ol>
+  <li><strong>Iniciar com Exemplos Simples</strong>
+    <ul>
+      <li>Começar com lançamentos básicos (compras, vendas, pagamentos)</li>
+      <li>Verificar o balancete após cada lançamento para entender os efeitos</li>
+    </ul>
+  </li>
+  <li><strong>Progressão Gradual</strong>
+    <ul>
+      <li>Avançar para operações mais complexas (depreciação, provisões)</li>
+      <li>Explorar os diferentes relatórios e sua interpretação</li>
+    </ul>
+  </li>
+  <li><strong>Projetos Práticos</strong>
+    <ul>
+      <li>Simular a contabilidade completa de uma empresa por um período</li>
+      <li>Analisar os resultados e propor melhorias na gestão</li>
+    </ul>
+  </li>
+</ol>
+
+<hr>
+
+<p><em>Nota: Este guia visual deve ser utilizado em conjunto com o documento principal "Sistema de Contabilidade Educacional" para uma compreensão completa do sistema.</em></p>
+{% endblock %}

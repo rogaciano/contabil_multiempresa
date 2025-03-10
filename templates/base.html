@@ -62,7 +62,7 @@
             <!-- Logo para barra superior -->
             <div class="flex items-center">
                 <a href="{% url 'dashboard' %}" class="text-xl font-bold text-gray-800 hidden md:block">
-                    <i class="fas fa-balance-scale mr-2"></i> Contabil Estudos
+                    <i class="fas fa-balance-scale mr-2"></i> Contábil Estudos
                 </a>
             </div>
 
@@ -158,14 +158,21 @@
                         <i class="fas fa-chevron-down text-sm transition-transform" :class="{ 'rotate-180': open }"></i>
                     </button>
                     <div x-show="open" class="ml-8 mt-1 space-y-1">
-                        <!-- Estes links serão implementados no futuro -->
-                        <a href="#" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100">Balanço Patrimonial</a>
-                        <a href="#" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100">DRE</a>
-                        <a href="#" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100">Fluxo de Caixa</a>
-                        <a href="#" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100">Balancete</a>
-                        <a href="#" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100">Razão</a>
+                        <!-- Links para os relatórios -->
+                        <a href="{% url 'balance_sheet' %}" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100 {% if 'balance_sheet' in request.resolver_match.url_name %}bg-blue-50 text-blue-600{% endif %}">Balanço Patrimonial</a>
+                        <a href="{% url 'income_statement' %}" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100 {% if 'income_statement' in request.resolver_match.url_name %}bg-blue-50 text-blue-600{% endif %}">DRE</a>
+                        <a href="{% url 'cash_flow' %}" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100 {% if 'cash_flow' in request.resolver_match.url_name %}bg-blue-50 text-blue-600{% endif %}">Fluxo de Caixa</a>
+                        <a href="{% url 'trial_balance' %}" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100 {% if 'trial_balance' in request.resolver_match.url_name %}bg-blue-50 text-blue-600{% endif %}">Balancete</a>
+                        <a href="{% url 'general_ledger' %}" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100 {% if 'general_ledger' in request.resolver_match.url_name %}bg-blue-50 text-blue-600{% endif %}">Razão</a>
                     </div>
                 </div>
+
+                <!-- Documentação -->
+                <a href="{% url 'docs_overview' %}" 
+                   class="flex items-center px-3 py-2 rounded-lg {% if 'docs_' in request.resolver_match.url_name %}bg-blue-50 text-blue-600{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
+                    <i class="fas fa-book mr-3"></i>
+                    Documentação
+                </a>
 
                 <!-- Sobre o Programa -->
                 <a href="{% url 'about' %}" 

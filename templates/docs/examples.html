@@ -1,0 +1,338 @@
+{% extends 'docs/base_docs.html' %}
+
+{% block doc_content %}
+<h1 id="exemplos-praticos-do-sistema-contabil">Exemplos Práticos do Sistema Contábil</h1>
+
+<p>Este documento apresenta exemplos práticos e casos de uso do Sistema de Contabilidade Educacional, com o objetivo de auxiliar estudantes e professores na aplicação dos conceitos contábeis utilizando o sistema.</p>
+
+<h2 id="caso-1-abertura-de-uma-empresa-comercial">Caso 1: Abertura de uma Empresa Comercial</h2>
+
+<h3 id="cenario">Cenário</h3>
+<p>Abertura da empresa "Comércio Modelo Ltda." com capital social de R$ 50.000,00, sendo R$ 30.000,00 em dinheiro e R$ 20.000,00 em equipamentos.</p>
+
+<h3 id="lancamentos-contabeis">Lançamentos Contábeis</h3>
+
+<ol>
+  <li><strong>Integralização do Capital em Dinheiro</strong>
+<pre><code>Débito: 1.1.1.01 - Caixa (Ativo Circulante) - R$ 30.000,00
+Crédito: 3.1.1.01 - Capital Social (Patrimônio Líquido) - R$ 30.000,00
+Histórico: Integralização de capital social em dinheiro</code></pre>
+  </li>
+  <li><strong>Integralização do Capital em Equipamentos</strong>
+<pre><code>Débito: 1.2.3.03 - Equipamentos (Ativo Não Circulante) - R$ 20.000,00
+Crédito: 3.1.1.01 - Capital Social (Patrimônio Líquido) - R$ 20.000,00
+Histórico: Integralização de capital social em equipamentos</code></pre>
+  </li>
+</ol>
+
+<h3 id="resultado-no-balanco-patrimonial">Resultado no Balanço Patrimonial</h3>
+
+<pre><code>ATIVO                          | PASSIVO
+------------------------------|-------------------------------
+ATIVO CIRCULANTE      30.000  | PASSIVO CIRCULANTE        0
+  Caixa               30.000  |
+                              | PASSIVO NÃO CIRCULANTE    0
+ATIVO NÃO CIRCULANTE  20.000  |
+  Equipamentos        20.000  | PATRIMÔNIO LÍQUIDO   50.000
+                              |   Capital Social     50.000
+------------------------------|-------------------------------
+TOTAL                 50.000  | TOTAL                50.000
+</code></pre>
+
+<h2 id="caso-2-operacoes-comerciais-basicas">Caso 2: Operações Comerciais Básicas</h2>
+
+<h3 id="cenario-1">Cenário</h3>
+<p>A empresa "Comércio Modelo Ltda." realiza as seguintes operações no mês de janeiro:</p>
+
+<ol>
+  <li>Compra de mercadorias a prazo: R$ 15.000,00</li>
+  <li>Venda de mercadorias à vista: R$ 10.000,00 (custo: R$ 6.000,00)</li>
+  <li>Pagamento de despesas administrativas: R$ 2.000,00</li>
+  <li>Pagamento parcial a fornecedores: R$ 5.000,00</li>
+</ol>
+
+<h3 id="lancamentos-contabeis-1">Lançamentos Contábeis</h3>
+
+<ol>
+  <li><strong>Compra de Mercadorias a Prazo</strong>
+<pre><code>Débito: 1.1.3.01 - Estoque de Mercadorias (Ativo Circulante) - R$ 15.000,00
+Crédito: 2.1.1.01 - Fornecedores (Passivo Circulante) - R$ 15.000,00
+Histórico: Compra de mercadorias a prazo conforme NF 12345</code></pre>
+  </li>
+  <li><strong>Venda de Mercadorias à Vista</strong>
+<pre><code># Registro da receita
+Débito: 1.1.1.01 - Caixa (Ativo Circulante) - R$ 10.000,00
+Crédito: 4.1.1.01 - Receita de Vendas (Receita) - R$ 10.000,00
+Histórico: Venda de mercadorias à vista conforme NF 001
+
+# Registro do custo
+Débito: 5.1.1.01 - Custo das Mercadorias Vendidas (Despesa) - R$ 6.000,00
+Crédito: 1.1.3.01 - Estoque de Mercadorias (Ativo Circulante) - R$ 6.000,00
+Histórico: Custo das mercadorias vendidas conforme NF 001</code></pre>
+  </li>
+  <li><strong>Pagamento de Despesas Administrativas</strong>
+<pre><code>Débito: 5.1.2.01 - Despesas Administrativas (Despesa) - R$ 2.000,00
+Crédito: 1.1.1.01 - Caixa (Ativo Circulante) - R$ 2.000,00
+Histórico: Pagamento de despesas administrativas do mês</code></pre>
+  </li>
+  <li><strong>Pagamento Parcial a Fornecedores</strong>
+<pre><code>Débito: 2.1.1.01 - Fornecedores (Passivo Circulante) - R$ 5.000,00
+Crédito: 1.1.1.01 - Caixa (Ativo Circulante) - R$ 5.000,00
+Histórico: Pagamento parcial a fornecedores</code></pre>
+  </li>
+</ol>
+
+<h3 id="balancete-de-verificacao-apos-as-operacoes">Balancete de Verificação após as Operações</h3>
+
+<pre><code>CONTA                                  | DÉBITO    | CRÉDITO   | SALDO D/C
+--------------------------------------|-----------|-----------|----------
+1.1.1.01 - Caixa                      | 40.000,00 |  7.000,00 | 33.000,00 D
+1.1.3.01 - Estoque de Mercadorias     | 15.000,00 |  6.000,00 |  9.000,00 D
+1.2.3.03 - Equipamentos               | 20.000,00 |       0,00 | 20.000,00 D
+2.1.1.01 - Fornecedores               |  5.000,00 | 15.000,00 | 10.000,00 C
+3.1.1.01 - Capital Social             |       0,00 | 50.000,00 | 50.000,00 C
+4.1.1.01 - Receita de Vendas          |       0,00 | 10.000,00 | 10.000,00 C
+5.1.1.01 - Custo das Mercadorias      |  6.000,00 |       0,00 |  6.000,00 D
+5.1.2.01 - Despesas Administrativas   |  2.000,00 |       0,00 |  2.000,00 D
+--------------------------------------|-----------|-----------|----------
+TOTAL                                 | 88.000,00 | 88.000,00 |
+</code></pre>
+
+<h3 id="demonstracao-do-resultado-dre-do-periodo">Demonstração do Resultado (DRE) do Período</h3>
+
+<pre><code>DEMONSTRAÇÃO DO RESULTADO DO EXERCÍCIO - JANEIRO/2025
+--------------------------------------------------
+RECEITA BRUTA                                 10.000,00
+  Vendas de Mercadorias                       10.000,00
+--------------------------------------------------
+(=) RECEITA LÍQUIDA                           10.000,00
+--------------------------------------------------
+(-) CUSTO DAS MERCADORIAS VENDIDAS             6.000,00
+--------------------------------------------------
+(=) LUCRO BRUTO                                4.000,00
+--------------------------------------------------
+(-) DESPESAS OPERACIONAIS                      2.000,00
+  Despesas Administrativas                     2.000,00
+--------------------------------------------------
+(=) LUCRO LÍQUIDO DO EXERCÍCIO                 2.000,00
+</code></pre>
+
+<h2 id="caso-3-fechamento-de-ano-fiscal">Caso 3: Fechamento de Ano Fiscal</h2>
+
+<h3 id="cenario-2">Cenário</h3>
+<p>Ao final do ano fiscal, a empresa "Comércio Modelo Ltda." precisa realizar o fechamento contábil, apurando o resultado e transferindo os saldos das contas de resultado para a conta de Lucros ou Prejuízos Acumulados.</p>
+
+<h3 id="processo-no-sistema">Processo no Sistema</h3>
+
+<ol>
+  <li><strong>Verificação do Balancete Final</strong>
+    <ul>
+      <li>Acessar o menu "Relatórios" > "Balancete"</li>
+      <li>Selecionar o período completo do ano fiscal</li>
+      <li>Verificar se todos os lançamentos foram registrados corretamente</li>
+    </ul>
+  </li>
+  <li><strong>Apuração do Resultado</strong>
+    <ul>
+      <li>O sistema automaticamente calcula o resultado do período</li>
+      <li>As contas de receitas e despesas são zeradas</li>
+      <li>O saldo resultante é transferido para Lucros/Prejuízos Acumulados</li>
+    </ul>
+  </li>
+  <li><strong>Fechamento do Ano Fiscal</strong>
+    <ul>
+      <li>Acessar o menu "Anos Fiscais"</li>
+      <li>Selecionar o ano fiscal atual</li>
+      <li>Clicar em "Fechar Ano Fiscal"</li>
+      <li>Confirmar a operação</li>
+    </ul>
+  </li>
+  <li><strong>Abertura do Novo Ano Fiscal</strong>
+    <ul>
+      <li>Acessar o menu "Anos Fiscais"</li>
+      <li>Clicar em "Novo Ano Fiscal"</li>
+      <li>Definir as datas de início e fim</li>
+      <li>O sistema automaticamente transfere os saldos patrimoniais para o novo ano</li>
+    </ul>
+  </li>
+</ol>
+
+<h3 id="lancamentos-automaticos-de-fechamento">Lançamentos Automáticos de Fechamento</h3>
+
+<ol>
+  <li><strong>Encerramento das Contas de Resultado</strong>
+<pre><code># Encerramento das Receitas
+Débito: 4.1.1.01 - Receita de Vendas - R$ 10.000,00
+Crédito: 3.3.1.01 - Apuração do Resultado do Exercício - R$ 10.000,00
+
+# Encerramento das Despesas
+Débito: 3.3.1.01 - Apuração do Resultado do Exercício - R$ 8.000,00
+Crédito: 5.1.1.01 - Custo das Mercadorias Vendidas - R$ 6.000,00
+Crédito: 5.1.2.01 - Despesas Administrativas - R$ 2.000,00
+
+# Transferência do Resultado para Lucros Acumulados
+Débito: 3.3.1.01 - Apuração do Resultado do Exercício - R$ 2.000,00
+Crédito: 3.3.2.01 - Lucros ou Prejuízos Acumulados - R$ 2.000,00</code></pre>
+  </li>
+</ol>
+
+<h3 id="balanco-patrimonial-apos-o-fechamento">Balanço Patrimonial após o Fechamento</h3>
+
+<pre><code>ATIVO                          | PASSIVO
+------------------------------|-------------------------------
+ATIVO CIRCULANTE      42.000  | PASSIVO CIRCULANTE     10.000
+  Caixa               33.000  |   Fornecedores         10.000
+  Estoque de Mercad.   9.000  |
+                              | PASSIVO NÃO CIRCULANTE     0
+ATIVO NÃO CIRCULANTE  20.000  |
+  Equipamentos        20.000  | PATRIMÔNIO LÍQUIDO    52.000
+                              |   Capital Social      50.000
+                              |   Lucros Acumulados    2.000
+------------------------------|-------------------------------
+TOTAL                 62.000  | TOTAL                 62.000
+</code></pre>
+
+<h2 id="caso-4-analise-financeira">Caso 4: Análise Financeira</h2>
+
+<h3 id="cenario-3">Cenário</h3>
+<p>A diretoria da empresa "Comércio Modelo Ltda." solicita uma análise financeira para avaliar o desempenho e a saúde financeira da empresa.</p>
+
+<h3 id="indices-financeiros-calculados-pelo-sistema">Índices Financeiros Calculados pelo Sistema</h3>
+
+<ol>
+  <li><strong>Índices de Liquidez</strong>
+<pre><code>Liquidez Corrente = Ativo Circulante / Passivo Circulante
+Liquidez Corrente = 42.000 / 10.000 = 4,2
+
+Liquidez Seca = (Ativo Circulante - Estoques) / Passivo Circulante
+Liquidez Seca = (42.000 - 9.000) / 10.000 = 3,3</code></pre>
+  </li>
+  <li><strong>Índices de Endividamento</strong>
+<pre><code>Grau de Endividamento = Passivo Total / Patrimônio Líquido
+Grau de Endividamento = 10.000 / 52.000 = 0,19 (19%)
+
+Composição do Endividamento = Passivo Circulante / Passivo Total
+Composição do Endividamento = 10.000 / 10.000 = 1,0 (100%)</code></pre>
+  </li>
+  <li><strong>Índices de Rentabilidade</strong>
+<pre><code>Margem Líquida = Lucro Líquido / Receita Líquida
+Margem Líquida = 2.000 / 10.000 = 0,20 (20%)
+
+Retorno sobre o Patrimônio Líquido = Lucro Líquido / Patrimônio Líquido
+Retorno sobre o PL = 2.000 / 52.000 = 0,038 (3,8%)</code></pre>
+  </li>
+</ol>
+
+<h3 id="interpretacao-dos-resultados">Interpretação dos Resultados</h3>
+
+<ol>
+  <li><strong>Liquidez</strong>
+    <ul>
+      <li>A empresa possui excelente liquidez, com capacidade de pagar suas dívidas de curto prazo mais de 4 vezes</li>
+      <li>Mesmo desconsiderando os estoques, a empresa mantém boa liquidez (3,3)</li>
+    </ul>
+  </li>
+  <li><strong>Endividamento</strong>
+    <ul>
+      <li>O nível de endividamento é baixo (19% do patrimônio líquido)</li>
+      <li>Todo o endividamento está concentrado no curto prazo (fornecedores)</li>
+    </ul>
+  </li>
+  <li><strong>Rentabilidade</strong>
+    <ul>
+      <li>A margem líquida de 20% é considerada boa para empresas comerciais</li>
+      <li>O retorno sobre o patrimônio líquido ainda é baixo (3,8%), mas isso é comum em empresas recém-abertas</li>
+    </ul>
+  </li>
+</ol>
+
+<h3 id="recomendacoes-baseadas-na-analise">Recomendações Baseadas na Análise</h3>
+
+<ol>
+  <li>Considerar a utilização do caixa disponível para:
+    <ul>
+      <li>Ampliar os estoques e aumentar a capacidade de vendas</li>
+      <li>Investir em marketing para aumentar o volume de negócios</li>
+      <li>Negociar descontos com fornecedores para pagamentos à vista</li>
+    </ul>
+  </li>
+  <li>Avaliar a possibilidade de diversificar a linha de produtos para aumentar a receita</li>
+  <li>Implementar controles de custos mais rigorosos para melhorar a margem de lucro</li>
+</ol>
+
+<h2 id="caso-5-depreciacao-e-provisoes">Caso 5: Depreciação e Provisões</h2>
+
+<h3 id="cenario-4">Cenário</h3>
+<p>Após 6 meses de operação, a empresa precisa registrar a depreciação dos equipamentos (10% ao ano) e criar uma provisão para devedores duvidosos (5% sobre o saldo de clientes de R$ 8.000,00).</p>
+
+<h3 id="lancamentos-contabeis-2">Lançamentos Contábeis</h3>
+
+<ol>
+  <li><strong>Registro da Depreciação Semestral</strong>
+<pre><code>Débito: 5.1.2.05 - Despesas com Depreciação - R$ 1.000,00
+Crédito: 1.2.3.04 - (-) Depreciação Acumulada - R$ 1.000,00
+Histórico: Registro da depreciação semestral dos equipamentos
+
+Cálculo: R$ 20.000,00 x 10% / 2 = R$ 1.000,00</code></pre>
+  </li>
+  <li><strong>Criação da Provisão para Devedores Duvidosos</strong>
+<pre><code>Débito: 5.1.2.06 - Despesas com PDD - R$ 400,00
+Crédito: 1.1.2.02 - (-) Provisão para Devedores Duvidosos - R$ 400,00
+Histórico: Constituição de provisão para devedores duvidosos
+
+Cálculo: R$ 8.000,00 x 5% = R$ 400,00</code></pre>
+  </li>
+</ol>
+
+<h3 id="impacto-no-balanco-patrimonial">Impacto no Balanço Patrimonial</h3>
+
+<pre><code>ATIVO                          | PASSIVO
+------------------------------|-------------------------------
+ATIVO CIRCULANTE      49.600  | PASSIVO CIRCULANTE     10.000
+  Caixa               33.000  |   Fornecedores         10.000
+  Clientes             8.000  |
+  (-) PDD               -400  | PASSIVO NÃO CIRCULANTE     0
+  Estoque de Mercad.   9.000  |
+                              | PATRIMÔNIO LÍQUIDO    58.600
+ATIVO NÃO CIRCULANTE  19.000  |   Capital Social      50.000
+  Equipamentos        20.000  |   Lucros Acumulados    8.600
+  (-) Depreciação     -1.000  |
+------------------------------|-------------------------------
+TOTAL                 68.600  | TOTAL                 68.600
+</code></pre>
+
+<hr>
+
+<h2 id="dicas-para-uso-educacional">Dicas para Uso Educacional</h2>
+
+<ol>
+  <li><strong>Utilize os Exemplos como Base</strong>
+    <ul>
+      <li>Os casos apresentados podem ser usados como ponto de partida para exercícios mais complexos</li>
+      <li>Modifique os valores e adicione novas transações para criar variações</li>
+    </ul>
+  </li>
+  <li><strong>Crie Cenários Completos</strong>
+    <ul>
+      <li>Desenvolva um cenário de negócio completo, desde a abertura até o fechamento do ano fiscal</li>
+      <li>Inclua diferentes tipos de transações para cobrir diversos conceitos contábeis</li>
+    </ul>
+  </li>
+  <li><strong>Explore os Relatórios</strong>
+    <ul>
+      <li>Após registrar os lançamentos, gere diferentes relatórios para analisar os resultados</li>
+      <li>Compare os relatórios gerados pelo sistema com cálculos manuais para verificar a compreensão</li>
+    </ul>
+  </li>
+  <li><strong>Trabalhe com Análises</strong>
+    <ul>
+      <li>Utilize os dados gerados para calcular índices financeiros</li>
+      <li>Interprete os resultados e proponha ações de melhoria para a empresa fictícia</li>
+    </ul>
+  </li>
+</ol>
+
+<hr>
+
+<p><em>Este documento de exemplos práticos complementa a documentação principal do Sistema de Contabilidade Educacional e deve ser utilizado como material de apoio para o ensino e aprendizagem de contabilidade.</em></p>
+{% endblock %}
