@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Excluir Item de Modelo - Sistema Contábil{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow rounded-lg p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Excluir Item de Modelo</h2>
+        <div>
+            <a href="{% url 'transaction_template_edit' object.template.pk %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                Voltar
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <i class="fas fa-exclamation-triangle text-red-400"></i>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-red-700">
+                    Atenção! Esta ação não pode ser desfeita.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-2">Informações do Item</h3>
+        <dl class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
+            <div class="sm:col-span-2">
+                <dt class="text-sm font-medium text-gray-500">Modelo</dt>
+                <dd class="mt-1 text-sm text-gray-900">{{ object.template.name }}</dd>
+            </div>
+            <div class="sm:col-span-2">
+                <dt class="text-sm font-medium text-gray-500">Descrição</dt>
+                <dd class="mt-1 text-sm text-gray-900">{{ object.description|default:"Sem descrição" }}</dd>
+            </div>
+            <div class="sm:col-span-1">
+                <dt class="text-sm font-medium text-gray-500">Conta de Débito</dt>
+                <dd class="mt-1 text-sm text-gray-900">{{ object.debit_account.code }} - {{ object.debit_account.name }}</dd>
+            </div>
+            <div class="sm:col-span-1">
+                <dt class="text-sm font-medium text-gray-500">Conta de Crédito</dt>
+                <dd class="mt-1 text-sm text-gray-900">{{ object.credit_account.code }} - {{ object.credit_account.name }}</dd>
+            </div>
+            <div class="sm:col-span-1">
+                <dt class="text-sm font-medium text-gray-500">Valor</dt>
+                <dd class="mt-1 text-sm text-gray-900">
+                    {% if object.is_percentage %}
+                    {{ object.value }}%
+                    {% else %}
+                    R$ {{ object.value }}
+                    {% endif %}
+                </dd>
+            </div>
+            <div class="sm:col-span-1">
+                <dt class="text-sm font-medium text-gray-500">Ordem</dt>
+                <dd class="mt-1 text-sm text-gray-900">{{ object.order }}</dd>
+            </div>
+        </dl>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <p class="text-gray-700 mb-4">Tem certeza de que deseja excluir este item do modelo "{{ object.template.name }}"?</p>
+        <div class="flex justify-end">
+            <a href="{% url 'transaction_template_edit' object.template.pk %}" class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mr-3">
+                Cancelar
+            </a>
+            <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                Excluir
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

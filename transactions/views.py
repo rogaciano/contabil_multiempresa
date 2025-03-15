@@ -1,17 +1,20 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.db.models import Q
+from django.utils.translation import gettext_lazy as _
 import csv
 from datetime import datetime
 from django.urls import reverse
+from decimal import Decimal, InvalidOperation
+from django.db import transaction as db_transaction
 
-from .models import Transaction
+from .models import Transaction, TransactionTemplate, TransactionTemplateItem
 from accounts.models import Account
-from .forms import TransactionForm
+from .forms import TransactionForm, TransactionTemplateItemForm
 from core.models import FiscalYear
 
 class TransactionListView(LoginRequiredMixin, ListView):
@@ -191,79 +194,85 @@ class TransactionImportView(LoginRequiredMixin, TemplateView):
                         description=row['description'],
                         debit_account=debit_account,
                         credit_account=credit_account,
-                        amount=row['amount'],
+                        value=row['value'],
                         document_number=row.get('document_number', ''),
                         notes=row.get('notes', ''),
                         created_by=request.user
                     )
                 except Account.DoesNotExist:
-                    messages.error(request, f'Conta não encontrada para a empresa atual: {row["debit_account"]} ou {row["credit_account"]}')
+                    messages.error(request, f'Conta não encontrada: {row["debit_account"]} ou {row["credit_account"]}')
+                    continue
+                except Exception as e:
+                    messages.error(request, f'Erro ao importar linha: {e}')
                     continue
             
             messages.success(request, 'Transações importadas com sucesso!')
+            return redirect('transaction_list')
         except Exception as e:
-            messages.error(request, f'Erro ao importar transações: {str(e)}')
-        
-        return super().get(request, *args, **kwargs)
+            messages.error(request, f'Erro ao processar o arquivo: {e}')
+            return super().get(request, *args, **kwargs)
 
 class TransactionExportView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="transacoes.csv"'
-        
-        writer = csv.writer(response)
-        writer.writerow([
-            'Data', 'Descrição', 'Conta Débito', 'Conta Crédito',
-            'Valor', 'Documento', 'Observações'
-        ])
-        
-        # Aplicar os mesmos filtros da lista de transações
-        transactions = Transaction.objects.all()
-        
-        # Filtrar pela empresa atual
+        # Obter a empresa atual
         company_id = request.session.get('current_company_id')
-        if company_id:
-            transactions = transactions.filter(
-                Q(debit_account__company_id=company_id) | 
-                Q(credit_account__company_id=company_id)
-            )
+        if not company_id:
+            messages.error(request, 'Selecione uma empresa antes de exportar transações.')
+            return redirect('transaction_list')
         
-        # Filtros
+        # Aplicar os mesmos filtros da lista
+        queryset = Transaction.objects.filter(company_id=company_id)
+        
         account_id = request.GET.get('account')
         start_date = request.GET.get('start_date')
         end_date = request.GET.get('end_date')
         search = request.GET.get('search')
         
         if account_id:
-            transactions = transactions.filter(
+            queryset = queryset.filter(
                 Q(debit_account_id=account_id) | Q(credit_account_id=account_id)
             )
         
         if start_date:
-            transactions = transactions.filter(date__gte=start_date)
+            queryset = queryset.filter(date__gte=start_date)
         
         if end_date:
-            transactions = transactions.filter(date__lte=end_date)
+            queryset = queryset.filter(date__lte=end_date)
             
         if search:
-            transactions = transactions.filter(
+            queryset = queryset.filter(
                 Q(description__icontains=search) |
                 Q(document_number__icontains=search)
             )
         
-        transactions = transactions.order_by('-date', '-created_at')
+        # Ordenar as transações
+        queryset = queryset.order_by('date', 'created_at')
         
-        for transaction in transactions:
+        # Configurar a resposta HTTP como um arquivo CSV
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="transactions.csv"'
+        
+        # Criar o escritor CSV
+        writer = csv.writer(response)
+        
+        # Escrever o cabeçalho
+        writer.writerow([
+            'Date', 'Description', 'Debit Account', 'Credit Account', 
+            'Value', 'Document Number', 'Notes'
+        ])
+        
+        # Escrever as linhas de dados
+        for transaction in queryset:
             writer.writerow([
-                transaction.date.strftime('%d/%m/%Y'),
+                transaction.date.strftime('%Y-%m-%d'),
                 transaction.description,
                 f"{transaction.debit_account.code} - {transaction.debit_account.name}",
                 f"{transaction.credit_account.code} - {transaction.credit_account.name}",
-                f"{transaction.amount:.2f}".replace('.', ','),
+                transaction.value,
                 transaction.document_number,
                 transaction.notes
             ])
-        
+            
         return response
 
 class JournalView(LoginRequiredMixin, ListView):
@@ -275,26 +284,29 @@ class JournalView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         queryset = super().get_queryset()
         
-        # Filtrar pela empresa atual
+        # Filtrar transações pela empresa atual
         company_id = self.request.session.get('current_company_id')
         if company_id:
-            queryset = queryset.filter(
-                Q(debit_account__company_id=company_id) | 
-                Q(credit_account__company_id=company_id)
-            )
+            queryset = queryset.filter(company_id=company_id)
         
+        # Filtros
         start_date = self.request.GET.get('start_date')
         end_date = self.request.GET.get('end_date')
         
         if start_date:
             queryset = queryset.filter(date__gte=start_date)
+        
         if end_date:
             queryset = queryset.filter(date__lte=end_date)
-            
+        
         return queryset.order_by('date', 'created_at')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        
+        # Filtros
+        context['start_date'] = self.request.GET.get('start_date', '')
+        context['end_date'] = self.request.GET.get('end_date', '')
         
         # Filtrar contas pela empresa atual
         company_id = self.request.session.get('current_company_id')
@@ -304,3 +316,416 @@ class JournalView(LoginRequiredMixin, ListView):
             context['accounts'] = Account.objects.filter(is_active=True)
             
         return context
+
+class TransactionTemplateListView(LoginRequiredMixin, ListView):
+    model = TransactionTemplate
+    template_name = 'transactions/transaction_template_list.html'
+    context_object_name = 'templates'
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Filtrar templates pela empresa atual
+        company_id = self.request.session.get('current_company_id')
+        if company_id:
+            queryset = queryset.filter(company_id=company_id)
+        
+        # Filtros
+        entry_type = self.request.GET.get('entry_type')
+        search = self.request.GET.get('search')
+        
+        if entry_type:
+            queryset = queryset.filter(entry_type=entry_type)
+            
+        if search:
+            queryset = queryset.filter(
+                Q(name__icontains=search) |
+                Q(description__icontains=search)
+            )
+            
+        return queryset.order_by('-is_active', 'name')  # Ordena com templates ativos primeiro
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['entry_types'] = TransactionTemplate.ENTRY_TYPE_CHOICES
+        return context
+
+
+class TransactionTemplateDetailView(LoginRequiredMixin, DetailView):
+    model = TransactionTemplate
+    template_name = 'transactions/transaction_template_detail.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['items'] = self.object.items.all().order_by('order')
+        return context
+
+
+class TransactionTemplateCreateView(LoginRequiredMixin, CreateView):
+    model = TransactionTemplate
+    template_name = 'transactions/transaction_template_form.html'
+    fields = ['name', 'description', 'entry_type']
+    
+    def dispatch(self, request, *args, **kwargs):
+        # Verificar se o usuário tem uma empresa selecionada
+        if not request.session.get('current_company_id'):
+            messages.error(request, 'Selecione uma empresa antes de criar um modelo de lançamento.')
+            return redirect('company_list')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def form_valid(self, form):
+        form.instance.company_id = self.request.session.get('current_company_id')
+        form.instance.created_by = self.request.user
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        messages.success(self.request, 'Modelo de lançamento criado com sucesso! Agora adicione os itens do modelo.')
+        return reverse('transaction_template_edit', kwargs={'pk': self.object.pk})
+
+
+class TransactionTemplateUpdateView(LoginRequiredMixin, UpdateView):
+    model = TransactionTemplate
+    template_name = 'transactions/transaction_template_form.html'
+    fields = ['name', 'description', 'entry_type', 'is_active']
+    
+    def dispatch(self, request, *args, **kwargs):
+        # Verificar se o modelo pertence à empresa atual
+        template = self.get_object()
+        if template.company_id != request.session.get('current_company_id'):
+            messages.error(request, 'Você não tem permissão para editar este modelo de lançamento.')
+            return redirect('transaction_template_list')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_success_url(self):
+        messages.success(self.request, 'Modelo de lançamento atualizado com sucesso!')
+        return reverse('transaction_template_detail', kwargs={'pk': self.object.pk})
+
+
+class TransactionTemplateDeleteView(LoginRequiredMixin, DeleteView):
+    model = TransactionTemplate
+    template_name = 'transactions/transaction_template_confirm_delete.html'
+    success_url = reverse_lazy('transaction_template_list')
+    
+    def dispatch(self, request, *args, **kwargs):
+        # Verificar se o modelo pertence à empresa atual
+        template = self.get_object()
+        if template.company_id != request.session.get('current_company_id'):
+            messages.error(request, 'Você não tem permissão para excluir este modelo de lançamento.')
+            return redirect('transaction_template_list')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Modelo de lançamento excluído com sucesso!')
+        return super().delete(request, *args, **kwargs)
+
+
+def transaction_template_item_create(request, template_id):
+    """
+    Cria um novo item para um template de transação
+    """
+    template = get_object_or_404(TransactionTemplate, pk=template_id)
+    
+    # Verificar se o usuário tem permissão para editar o template
+    if not request.user.has_perm('transactions.change_transactiontemplate') and template.created_by != request.user:
+        messages.error(request, _('Você não tem permissão para editar este template.'))
+        return redirect('transaction_template_detail', pk=template_id)
+    
+    # Verificar se o template pertence à empresa atual
+    if template.company_id != request.session.get('current_company_id'):
+        messages.error(request, _('Este template não pertence à empresa atual.'))
+        return redirect('transaction_template_list')
+    
+    print(f"DEBUG: Template company_id: {template.company_id}")
+    
+    if request.method == 'POST':
+        form = TransactionTemplateItemForm(request.POST, company_id=template.company_id)
+        
+        # Criar uma instância do item e definir o template antes da validação
+        item = form.instance
+        item.template = template
+        
+        if form.is_valid():
+            # Definir a ordem do item como a última ordem + 1
+            last_item = TransactionTemplateItem.objects.filter(template=template).order_by('-order').first()
+            item.order = (last_item.order + 1) if last_item else 1
+            
+            # Validar se a conta de débito e crédito são contas analíticas
+            if not item.debit_account.is_leaf:
+                form.add_error('debit_account', _('A conta de débito deve ser uma conta analítica.'))
+                return render(request, 'transactions/transaction_template_item_form.html', {
+                    'form': form,
+                    'template': template,
+                    'company_id': template.company_id,
+                })
+            
+            if not item.credit_account.is_leaf:
+                form.add_error('credit_account', _('A conta de crédito deve ser uma conta analítica.'))
+                return render(request, 'transactions/transaction_template_item_form.html', {
+                    'form': form,
+                    'template': template,
+                    'company_id': template.company_id,
+                })
+            
+            # Validar se o valor é válido
+            if not item.is_percentage and not item.value:
+                form.add_error('value', _('O valor é obrigatório para itens com valor fixo.'))
+                return render(request, 'transactions/transaction_template_item_form.html', {
+                    'form': form,
+                    'template': template,
+                    'company_id': template.company_id,
+                })
+            
+            if item.is_percentage and (not item.value or item.value <= 0 or item.value > 100):
+                form.add_error('value', _('O percentual deve ser maior que 0 e menor ou igual a 100.'))
+                return render(request, 'transactions/transaction_template_item_form.html', {
+                    'form': form,
+                    'template': template,
+                    'company_id': template.company_id,
+                })
+            
+            form.save()
+            messages.success(request, _('Item adicionado com sucesso!'))
+            return redirect('transaction_template_edit', pk=template_id)
+    else:
+        form = TransactionTemplateItemForm(company_id=template.company_id)
+    
+    # Adicionar company_id ao contexto para uso no template
+    context = {
+        'form': form,
+        'template': template,
+        'company_id': template.company_id,
+    }
+    
+    print(f"DEBUG: Renderizando formulário com company_id={template.company_id}")
+    
+    return render(request, 'transactions/transaction_template_item_form.html', context)
+
+
+class TransactionTemplateItemUpdateView(LoginRequiredMixin, UpdateView):
+    """
+    View para atualizar um item de template de transação
+    """
+    model = TransactionTemplateItem
+    form_class = TransactionTemplateItemForm
+    template_name = 'transactions/transaction_template_item_form.html'
+    
+    def get_success_url(self):
+        return reverse('transaction_template_edit', kwargs={'pk': self.object.template.pk})
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Passar o ID da empresa para o formulário
+        kwargs['company_id'] = self.object.template.company_id
+        return kwargs
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['template'] = self.object.template
+        context['company_id'] = self.object.template.company_id
+        return context
+    
+    def form_valid(self, form):
+        # Validar se a conta de débito e crédito são contas analíticas
+        if not form.instance.debit_account.is_leaf:
+            form.add_error('debit_account', _('A conta de débito deve ser uma conta analítica.'))
+            return self.form_invalid(form)
+        
+        if not form.instance.credit_account.is_leaf:
+            form.add_error('credit_account', _('A conta de crédito deve ser uma conta analítica.'))
+            return self.form_invalid(form)
+        
+        # Validar se o valor é válido
+        if not form.instance.is_percentage and not form.instance.value:
+            form.add_error('value', _('O valor é obrigatório para itens com valor fixo.'))
+            return self.form_invalid(form)
+        
+        if form.instance.is_percentage and (not form.instance.value or form.instance.value <= 0 or form.instance.value > 100):
+            form.add_error('value', _('O percentual deve ser maior que 0 e menor ou igual a 100.'))
+            return self.form_invalid(form)
+        
+        messages.success(self.request, _('Item atualizado com sucesso!'))
+        return super().form_valid(form)
+
+
+class TransactionTemplateItemDeleteView(LoginRequiredMixin, DeleteView):
+    model = TransactionTemplateItem
+    template_name = 'transactions/transaction_template_item_confirm_delete.html'
+    
+    def dispatch(self, request, *args, **kwargs):
+        # Verificar se o item pertence a um template da empresa atual
+        item = self.get_object()
+        if item.template.company_id != request.session.get('current_company_id'):
+            messages.error(request, _('Você não tem permissão para excluir este item.'))
+            return redirect('transaction_template_list')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_success_url(self):
+        messages.success(self.request, _('Item excluído com sucesso!'))
+        return reverse('transaction_template_edit', kwargs={'pk': self.object.template.pk})
+
+class TransactionTemplateEditView(LoginRequiredMixin, UpdateView):
+    """
+    View para edição completa do template, incluindo seus itens.
+    """
+    model = TransactionTemplate
+    template_name = 'transactions/transaction_template_edit.html'
+    fields = ['name', 'description', 'entry_type', 'is_active']
+    
+    def dispatch(self, request, *args, **kwargs):
+        # Verificar se o modelo pertence à empresa atual
+        template = self.get_object()
+        if template.company_id != request.session.get('current_company_id'):
+            messages.error(request, _('Você não tem permissão para editar este modelo de lançamento.'))
+            return redirect('transaction_template_list')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['items'] = self.object.items.all().order_by('order')
+        return context
+    
+    def get_success_url(self):
+        messages.success(self.request, _('Modelo de lançamento atualizado com sucesso!'))
+        return reverse('transaction_template_edit', kwargs={'pk': self.object.pk})
+
+
+class TransactionFromTemplateView(LoginRequiredMixin, View):
+    """
+    View para criar transações a partir de um modelo.
+    Esta view permite ao usuário informar apenas os valores variáveis
+    e gera automaticamente todos os lançamentos relacionados.
+    """
+    template_name = 'transactions/transaction_from_template.html'
+    
+    def dispatch(self, request, *args, **kwargs):
+        # Obter o modelo de transação
+        template_id = kwargs.get('template_id')
+        self.template = get_object_or_404(TransactionTemplate, pk=template_id)
+        
+        # Verificar se o modelo pertence à empresa atual
+        if self.template.company_id != request.session.get('current_company_id'):
+            messages.error(request, _('Você não tem permissão para usar este modelo.'))
+            return redirect('transaction_template_list')
+        
+        # Verificar se o modelo está ativo
+        if not self.template.is_active:
+            messages.error(request, _('Este modelo de lançamento está inativo e não pode ser usado.'))
+            return redirect('transaction_template_list')
+        
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get(self, request, *args, **kwargs):
+        # Obter os itens do modelo
+        items = self.template.items.all().order_by('order')
+        
+        # Verificar se o modelo tem pelo menos um item
+        if not items.exists():
+            messages.error(request, _('Este modelo não possui itens configurados.'))
+            return redirect('transaction_template_list')
+        
+        # Renderizar o formulário
+        return render(request, self.template_name, {
+            'template': self.template,
+            'items': items,
+        })
+    
+    def post(self, request, *args, **kwargs):
+        try:
+            # Obter os dados do formulário
+            base_amount = request.POST.get('base_amount')
+            date = request.POST.get('date')
+            description = request.POST.get('description')
+            document_number = request.POST.get('document_number', '')
+            notes = request.POST.get('notes', '')
+            
+            # Validar o valor base
+            try:
+                base_amount = Decimal(base_amount.replace(',', '.'))
+            except (ValueError, InvalidOperation, AttributeError):
+                messages.error(request, 'O valor base é inválido.')
+                return self.get(request, *args, **kwargs)
+            
+            if base_amount <= 0:
+                messages.error(request, 'O valor base deve ser maior que zero.')
+                return self.get(request, *args, **kwargs)
+                
+            if not date:
+                messages.error(request, 'A data é obrigatória.')
+                return self.get(request, *args, **kwargs)
+                
+            if not description:
+                messages.error(request, 'A descrição é obrigatória.')
+                return self.get(request, *args, **kwargs)
+            
+            # Gerar as transações com base no template
+            with db_transaction.atomic():
+                transactions = self.template.generate_transactions(
+                    base_amount=base_amount,
+                    date=date,
+                    description=description,
+                    document_number=document_number,
+                    notes=notes,
+                    user=self.request.user
+                )
+                
+                # Salvar todas as transações
+                for transaction in transactions:
+                    transaction.save()
+            
+            # Mensagem de sucesso
+            messages.success(
+                self.request, 
+                f'Foram criados {len(transactions)} lançamentos com sucesso a partir do modelo "{self.template.name}"!'
+            )
+            
+            # Redirecionar para a lista de transações
+            return redirect('transaction_list')
+            
+        except (ValueError, TypeError, InvalidOperation) as e:
+            messages.error(request, f'Erro ao processar os dados do formulário: {str(e)}')
+            return self.get(request, *args, **kwargs)
+
+def account_search(request):
+    """
+    View para buscar contas via AJAX para o Select2
+    """
+    term = request.GET.get('term', '')
+    company_id = request.GET.get('company_id')
+    
+    print(f"DEBUG: Buscando contas com term={term}, company_id={company_id}")
+    
+    # Iniciar com todas as contas ativas
+    queryset = Account.objects.filter(is_active=True)
+    
+    # Filtrar por empresa se company_id estiver presente
+    if company_id:
+        queryset = queryset.filter(company_id=company_id)
+        print(f"DEBUG: Filtrado por company_id={company_id}, encontradas {queryset.count()} contas")
+    
+    # Filtrar pelo termo de busca
+    if term:
+        queryset = queryset.filter(
+            Q(name__icontains=term) | Q(code__icontains=term)
+        )
+        print(f"DEBUG: Filtrado por term={term}, encontradas {queryset.count()} contas")
+    
+    # Filtrar apenas contas analíticas (que não têm filhos)
+    # Como is_leaf é uma propriedade e não um campo do banco de dados,
+    # precisamos filtrar depois de obter os resultados
+    leaf_accounts = [account for account in queryset if account.is_leaf]
+    print(f"DEBUG: Filtrado para contas analíticas, encontradas {len(leaf_accounts)} contas")
+    
+    # Formatar os resultados para o Select2
+    results = []
+    for account in leaf_accounts[:20]:  # Limitar a 20 resultados
+        results.append({
+            'id': account.id,
+            'text': f"{account.code} - {account.name}"
+        })
+    
+    return JsonResponse({
+        'results': results,
+        'pagination': {
+            'more': len(leaf_accounts) > 20  # Indicar se há mais resultados
+        }
+    })

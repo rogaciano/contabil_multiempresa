@@ -205,9 +205,16 @@
 
                 <!-- Livro Diário -->
                 <a href="{% url 'transaction_list' %}" 
-                   class="flex items-center px-3 py-2 rounded-lg {% if 'transaction' in request.resolver_match.url_name %}bg-blue-50 text-blue-600{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
+                   class="flex items-center px-3 py-2 rounded-lg {% if request.resolver_match.url_name == 'transaction_list' or request.resolver_match.url_name == 'transaction_create' or request.resolver_match.url_name == 'transaction_detail' or request.resolver_match.url_name == 'transaction_update' or request.resolver_match.url_name == 'transaction_delete' or request.resolver_match.url_name == 'transaction_import' or request.resolver_match.url_name == 'transaction_export' or request.resolver_match.url_name == 'journal' %}bg-blue-50 text-blue-600{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
                     <i class="fas fa-book-journal-whills mr-3"></i>
                     Livro Diário
+                </a>
+
+                <!-- Modelos de Transação -->
+                <a href="{% url 'transaction_template_list' %}" 
+                   class="flex items-center px-3 py-2 rounded-lg {% if 'template' in request.resolver_match.url_name %}bg-blue-50 text-blue-600{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
+                    <i class="fas fa-copy mr-3"></i>
+                    Modelos de Transação
                 </a>
 
                 <!-- Empresas -->

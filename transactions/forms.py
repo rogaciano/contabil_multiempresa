@@ -1,6 +1,6 @@
 from django import forms
 from django_select2 import forms as s2forms
-from .models import Transaction
+from .models import Transaction, TransactionTemplate, TransactionTemplateItem
 from accounts.models import Account
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
@@ -167,3 +167,137 @@ class TransactionForm(forms.ModelForm):
         if account and not account.is_leaf:
             raise forms.ValidationError(_('Apenas contas analíticas (de último nível) podem ser usadas em transações. Contas sintéticas (com subcontas) não são permitidas.'))
         return account
+
+
+class TransactionTemplateForm(forms.ModelForm):
+    """
+    Formulário para criação e edição de modelos de transação
+    """
+    class Meta:
+        model = TransactionTemplate
+        fields = ['name', 'description', 'entry_type']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'entry_type': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+
+class TransactionTemplateItemForm(forms.ModelForm):
+    """
+    Formulário para criação e edição de itens de modelo de transação
+    """
+    debit_account = forms.ModelChoiceField(
+        queryset=Account.objects.filter(is_active=True),
+        widget=AccountSelect2Widget(
+            attrs={'data-placeholder': 'Clique com o Mouse ou Barra de Espaço para Pesquisar conta de débito...', 'style': 'width: 100%;'}
+        )
+    )
+    
+    credit_account = forms.ModelChoiceField(
+        queryset=Account.objects.filter(is_active=True),
+        widget=AccountSelect2Widget(
+            attrs={'data-placeholder': 'Clique com o Mouse ou Barra de Espaço para Pesquisar conta de crédito...', 'style': 'width: 100%;'}
+        )
+    )
+    
+    class Meta:
+        model = TransactionTemplateItem
+        fields = ['description', 'debit_account', 'credit_account', 'value', 'is_percentage', 'order', 'is_active']
+        widgets = {
+            'description': forms.TextInput(attrs={'class': 'form-control'}),
+            'value': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'is_percentage': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'order': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        self.company_id = kwargs.pop('company_id', None)
+        super().__init__(*args, **kwargs)
+        
+        if self.company_id:
+            # Filtrar contas pelo company_id
+            self.fields['debit_account'].queryset = Account.objects.filter(
+                company_id=self.company_id,
+                is_active=True,
+                is_leaf=True  # Garantir que apenas contas analíticas sejam exibidas
+            )
+            self.fields['debit_account'].widget.company_id = self.company_id
+            
+            self.fields['credit_account'].queryset = Account.objects.filter(
+                company_id=self.company_id,
+                is_active=True,
+                is_leaf=True  # Garantir que apenas contas analíticas sejam exibidas
+            )
+            self.fields['credit_account'].widget.company_id = self.company_id
+    
+    def clean_debit_account(self):
+        account = self.cleaned_data.get('debit_account')
+        if account and not account.is_leaf:
+            raise forms.ValidationError(_('Apenas contas analíticas (de último nível) podem ser usadas em transações.'))
+        return account
+    
+    def clean_credit_account(self):
+        account = self.cleaned_data.get('credit_account')
+        if account and not account.is_leaf:
+            raise forms.ValidationError(_('Apenas contas analíticas (de último nível) podem ser usadas em transações.'))
+        return account
+
+
+class TransactionFromTemplateForm(forms.Form):
+    """
+    Formulário para criar transações a partir de um modelo
+    """
+    date = forms.DateField(
+        label=_('Data'),
+        widget=CustomDateInput()
+    )
+    document_number = forms.CharField(
+        label=_('Número do Documento'),
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    description = forms.CharField(
+        label=_('Descrição'),
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    total_amount = forms.DecimalField(
+        label=_('Valor Total'),
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})
+    )
+    notes = forms.CharField(
+        label=_('Observações'),
+        required=False,
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3})
+    )
+    
+    def __init__(self, *args, **kwargs):
+        self.company_id = kwargs.pop('company_id', None)
+        super().__init__(*args, **kwargs)
+    
+    def clean_date(self):
+        date = self.cleaned_data.get('date')
+        
+        if not date:
+            return date
+            
+        if not self.company_id:
+            raise forms.ValidationError(_('Selecione uma empresa antes de criar uma transação.'))
+            
+        # Verificar se a data está dentro do período de um ano fiscal ativo
+        from core.models import FiscalYear
+        fiscal_year = FiscalYear.objects.filter(
+            company_id=self.company_id,
+            start_date__lte=date,
+            end_date__gte=date,
+            is_closed=False
+        ).first()
+        
+        if not fiscal_year:
+            raise forms.ValidationError(_(
+                'A data da transação deve estar dentro do período de um ano fiscal ativo. '
+                'Verifique se existe um ano fiscal aberto que inclua esta data.'
+            ))
+            
+        return date

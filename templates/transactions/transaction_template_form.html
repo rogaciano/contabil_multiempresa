@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}Editar{% else %}Novo{% endif %} Modelo de Lançamento - Sistema Contábil{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow rounded-lg p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">{% if object %}Editar{% else %}Novo{% endif %} Modelo de Lançamento</h2>
+        <div>
+            <a href="{% url 'transaction_template_list' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <i class="fas fa-arrow-left mr-2"></i> Voltar para Lista
+            </a>
+        </div>
+    </div>
+
+    <!-- Explicação sobre modelos de lançamento -->
+    <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h3 class="text-lg font-medium text-blue-800 mb-2">O que são Modelos de Lançamento?</h3>
+        <p class="text-blue-700">
+            Modelos de lançamento permitem criar múltiplos lançamentos contábeis relacionados de uma só vez, como vendas e compras.
+            Após criar o modelo, você poderá adicionar itens que representam cada lançamento individual.
+        </p>
+        <p class="text-blue-700 mt-2">
+            <strong>Exemplo:</strong> Um modelo de "Venda à Vista" pode incluir o lançamento principal da venda e os lançamentos de impostos relacionados.
+        </p>
+    </div>
+
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+        <div class="rounded-md bg-red-50 p-4 mb-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-circle text-red-400"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800">Ocorreram erros ao processar o formulário:</h3>
+                    <div class="mt-2 text-sm text-red-700">
+                        <ul class="list-disc pl-5 space-y-1">
+                            {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="bg-gray-50 p-4 rounded-lg">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Informações Básicas</h3>
+            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                <div class="sm:col-span-4">
+                    <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        {{ form.name.label }}
+                    </label>
+                    <div class="mt-1">
+                        <input type="text" name="{{ form.name.name }}" id="{{ form.name.id_for_label }}" value="{{ form.name.value|default:'' }}" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md {% if form.name.errors %}border-red-300{% endif %}" placeholder="Ex: Venda à Vista, Compra de Mercadorias, etc.">
+                    </div>
+                    {% if form.name.errors %}
+                    <p class="mt-2 text-sm text-red-600">
+                        {% for error in form.name.errors %}{{ error }}{% endfor %}
+                    </p>
+                    {% endif %}
+                    <p class="mt-2 text-sm text-gray-500">Nome descritivo para identificar este modelo</p>
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label for="{{ form.entry_type.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        {{ form.entry_type.label }}
+                    </label>
+                    <div class="mt-1">
+                        <select name="{{ form.entry_type.name }}" id="{{ form.entry_type.id_for_label }}" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md {% if form.entry_type.errors %}border-red-300{% endif %}">
+                            {% for value, text in form.entry_type.field.choices %}
+                            <option value="{{ value }}" {% if form.entry_type.value == value %}selected{% endif %}>{{ text }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% if form.entry_type.errors %}
+                    <p class="mt-2 text-sm text-red-600">
+                        {% for error in form.entry_type.errors %}{{ error }}{% endfor %}
+                    </p>
+                    {% endif %}
+                    <p class="mt-2 text-sm text-gray-500">Categoria do lançamento</p>
+                </div>
+
+                <div class="sm:col-span-6">
+                    <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        {{ form.description.label }}
+                    </label>
+                    <div class="mt-1">
+                        <textarea name="{{ form.description.name }}" id="{{ form.description.id_for_label }}" rows="4" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md {% if form.description.errors %}border-red-300{% endif %}" placeholder="Descreva o propósito deste modelo e como ele deve ser utilizado...">{{ form.description.value|default:'' }}</textarea>
+                    </div>
+                    {% if form.description.errors %}
+                    <p class="mt-2 text-sm text-red-600">
+                        {% for error in form.description.errors %}{{ error }}{% endfor %}
+                    </p>
+                    {% endif %}
+                    <p class="mt-2 text-sm text-gray-500">Descrição detalhada para ajudar outros usuários a entender o propósito deste modelo</p>
+                </div>
+
+                {% if object %}
+                <div class="sm:col-span-2">
+                    <div class="flex items-center h-full pt-6">
+                        <input type="checkbox" name="{{ form.is_active.name }}" id="{{ form.is_active.id_for_label }}" {% if form.is_active.value %}checked{% endif %} class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                        <label for="{{ form.is_active.id_for_label }}" class="ml-2 block text-sm font-medium text-gray-700">
+                            {{ form.is_active.label }}
+                        </label>
+                    </div>
+                    {% if form.is_active.errors %}
+                    <p class="mt-2 text-sm text-red-600">
+                        {% for error in form.is_active.errors %}{{ error }}{% endfor %}
+                    </p>
+                    {% endif %}
+                    <p class="mt-2 text-sm text-gray-500">Desative para ocultar este modelo da lista de modelos disponíveis</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="pt-5">
+            <div class="flex justify-end">
+                <button type="submit" class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    {% if object %}Atualizar{% else %}Criar{% endif %} Modelo
+                </button>
+            </div>
+        </div>
+    </form>
+
+    {% if object %}
+    <!-- Próximos passos após criar o modelo -->
+    <div class="mt-8 bg-green-50 border border-green-200 rounded-lg p-4">
+        <h3 class="text-lg font-medium text-green-800 mb-2">Próximos Passos</h3>
+        <p class="text-green-700">
+            Agora que você atualizou as informações básicas do modelo, você pode:
+        </p>
+        <div class="mt-4 flex flex-col sm:flex-row gap-4">
+            <a href="{% url 'transaction_template_item_create' object.pk %}" class="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                <i class="fas fa-plus mr-2"></i> Adicionar Itens ao Modelo
+            </a>
+            <a href="{% url 'transaction_from_template' object.pk %}" class="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <i class="fas fa-play mr-2"></i> Usar Este Modelo
+            </a>
+            <a href="{% url 'transaction_template_detail' object.pk %}" class="inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <i class="fas fa-eye mr-2"></i> Ver Detalhes do Modelo
+            </a>
+        </div>
+    </div>
+    {% else %}
+    <!-- Próximos passos após criar o modelo -->
+    <div class="mt-8 bg-green-50 border border-green-200 rounded-lg p-4">
+        <h3 class="text-lg font-medium text-green-800 mb-2">Próximos Passos</h3>
+        <p class="text-green-700">
+            Após criar o modelo, você poderá adicionar itens que representam cada lançamento individual.
+            Cada item pode ter um valor fixo ou ser calculado como uma porcentagem do valor base.
+        </p>
+        <p class="text-green-700 mt-2">
+            <strong>Exemplo:</strong> Para um modelo de venda, você pode criar um item para o valor principal da venda (100%) 
+            e outro item para o imposto (17% do valor da venda).
+        </p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Guia de uso de modelos de lançamento -->
+<div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <h3 class="text-lg font-medium text-blue-800 mb-2">Como usar Modelos de Lançamento</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <h4 class="font-medium text-blue-700">1. Criar o Modelo</h4>
+            <p class="text-blue-700 text-sm">
+                Preencha as informações básicas como nome e tipo de lançamento.
+                Uma descrição clara ajudará outros usuários a entender o propósito do modelo.
+            </p>
+        </div>
+        <div>
+            <h4 class="font-medium text-blue-700">2. Adicionar Itens</h4>
+            <p class="text-blue-700 text-sm">
+                Adicione os itens que compõem o modelo, como o lançamento principal e os lançamentos relacionados.
+                Cada item pode ter um valor fixo ou ser calculado como uma porcentagem do valor base.
+            </p>
+        </div>
+        <div>
+            <h4 class="font-medium text-blue-700">3. Usar o Modelo</h4>
+            <p class="text-blue-700 text-sm">
+                Ao usar o modelo, você informará apenas o valor base e a data, e o sistema criará automaticamente
+                todos os lançamentos relacionados com os valores calculados corretamente.
+            </p>
+        </div>
+        <div>
+            <h4 class="font-medium text-blue-700">4. Gerenciar Modelos</h4>
+            <p class="text-blue-700 text-sm">
+                Você pode editar, desativar ou reativar modelos conforme necessário.
+                Modelos inativos não aparecerão na lista de modelos disponíveis para uso.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

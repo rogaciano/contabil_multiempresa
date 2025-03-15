@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Editar{% else %}Novo{% endif %} Item de Modelo - Sistema Contábil{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow rounded-lg p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">{% if object %}Editar{% else %}Novo{% endif %} Item do Modelo: {{ template.name }}</h2>
+        <div>
+            <a href="{% url 'transaction_template_edit' template.pk %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <i class="fas fa-arrow-left mr-2"></i> Voltar para Edição do Modelo
+            </a>
+        </div>
+    </div>
+
+    <!-- Explicação sobre os tipos de itens -->
+    <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h3 class="text-lg font-medium text-blue-800 mb-2">Tipos de Itens do Modelo</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <h4 class="font-medium text-blue-700">Item Principal (Valor Base)</h4>
+                <p class="text-blue-700 text-sm">
+                    Para criar o item principal que usará o valor base informado pelo usuário:
+                    <ul class="list-disc pl-5 mt-1 text-blue-700 text-sm">
+                        <li>Desmarque a opção "É porcentagem"</li>
+                        <li>Deixe o campo "Valor/Porcentagem" vazio</li>
+                    </ul>
+                </p>
+            </div>
+            <div>
+                <h4 class="font-medium text-blue-700">Item com Percentual</h4>
+                <p class="text-blue-700 text-sm">
+                    Para criar um item que será calculado como percentual do valor base:
+                    <ul class="list-disc pl-5 mt-1 text-blue-700 text-sm">
+                        <li>Marque a opção "É porcentagem"</li>
+                        <li>Informe o percentual (ex: 20 para 20%)</li>
+                    </ul>
+                </p>
+            </div>
+            <div>
+                <h4 class="font-medium text-blue-700">Item com Valor Fixo</h4>
+                <p class="text-blue-700 text-sm">
+                    Para criar um item com valor fixo, independente do valor base:
+                    <ul class="list-disc pl-5 mt-1 text-blue-700 text-sm">
+                        <li>Desmarque a opção "É porcentagem"</li>
+                        <li>Informe o valor fixo desejado</li>
+                    </ul>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+        <div class="rounded-md bg-red-50 p-4 mb-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-circle text-red-400"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800">Ocorreram erros ao processar o formulário:</h3>
+                    <div class="mt-2 text-sm text-red-700">
+                        <ul class="list-disc pl-5 space-y-1">
+                            {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="bg-gray-50 p-4 rounded-lg">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Informações Básicas</h3>
+            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                <div class="sm:col-span-6">
+                    <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        {{ form.description.label }}
+                    </label>
+                    <div class="mt-1">
+                        <input type="text" name="{{ form.description.name }}" id="{{ form.description.id_for_label }}" value="{{ form.description.value|default:'' }}" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md {% if form.description.errors %}border-red-300{% endif %}" placeholder="Ex: Venda à Vista, ICMS, Frete, etc.">
+                    </div>
+                    {% if form.description.errors %}
+                    <p class="mt-2 text-sm text-red-600">
+                        {% for error in form.description.errors %}{{ error }}{% endfor %}
+                    </p>
+                    {% endif %}
+                    {% if form.description.help_text %}
+                    <p class="mt-2 text-sm text-gray-500">{{ form.description.help_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-lg">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Contas Contábeis</h3>
+            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                <div class="sm:col-span-3">
+                    <label for="{{ form.debit_account.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        {{ form.debit_account.label }}
+                    </label>
+                    <div class="mt-1">
+                        {{ form.debit_account }}
+                    </div>
+                    {% if form.debit_account.errors %}
+                    <p class="mt-2 text-sm text-red-600">
+                        {% for error in form.debit_account.errors %}{{ error }}{% endfor %}
+                    </p>
+                    {% endif %}
+                    {% if form.debit_account.help_text %}
+                    <p class="mt-2 text-sm text-gray-500">{{ form.debit_account.help_text }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="sm:col-span-3">
+                    <label for="{{ form.credit_account.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        {{ form.credit_account.label }}
+                    </label>
+                    <div class="mt-1">
+                        {{ form.credit_account }}
+                    </div>
+                    {% if form.credit_account.errors %}
+                    <p class="mt-2 text-sm text-red-600">
+                        {% for error in form.credit_account.errors %}{{ error }}{% endfor %}
+                    </p>
+                    {% endif %}
+                    {% if form.credit_account.help_text %}
+                    <p class="mt-2 text-sm text-gray-500">{{ form.credit_account.help_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-lg">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Valor e Configurações</h3>
+            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                <div class="sm:col-span-2">
+                    <div class="flex items-center">
+                        <input type="checkbox" name="{{ form.is_percentage.name }}" id="{{ form.is_percentage.id_for_label }}" {% if form.is_percentage.value %}checked{% endif %} class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                        <label for="{{ form.is_percentage.id_for_label }}" class="ml-2 block text-sm font-medium text-gray-700">
+                            {{ form.is_percentage.label }}
+                        </label>
+                    </div>
+                    {% if form.is_percentage.errors %}
+                    <p class="mt-2 text-sm text-red-600">
+                        {% for error in form.is_percentage.errors %}{{ error }}{% endfor %}
+                    </p>
+                    {% endif %}
+                    {% if form.is_percentage.help_text %}
+                    <p class="mt-2 text-sm text-gray-500">{{ form.is_percentage.help_text }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="sm:col-span-4">
+                    <label for="{{ form.value.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        {{ form.value.label }}
+                    </label>
+                    <div class="mt-1">
+                        <input type="number" step="0.01" name="{{ form.value.name }}" id="{{ form.value.id_for_label }}" value="{{ form.value.value|default:'' }}" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md {% if form.value.errors %}border-red-300{% endif %}" placeholder="Deixe vazio para usar o valor base">
+                    </div>
+                    {% if form.value.errors %}
+                    <p class="mt-2 text-sm text-red-600">
+                        {% for error in form.value.errors %}{{ error }}{% endfor %}
+                    </p>
+                    {% endif %}
+                    <p class="mt-2 text-sm text-gray-500">
+                        <span id="value_help_percentage" {% if not form.is_percentage.value %}class="hidden"{% endif %}>Informe o percentual (ex: 20 para 20%)</span>
+                        <span id="value_help_fixed" {% if form.is_percentage.value %}class="hidden"{% endif %}>Informe o valor fixo ou deixe vazio para usar o valor base</span>
+                    </p>
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label for="{{ form.order.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        {{ form.order.label }}
+                    </label>
+                    <div class="mt-1">
+                        <input type="number" name="{{ form.order.name }}" id="{{ form.order.id_for_label }}" value="{{ form.order.value|default:'0' }}" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md {% if form.order.errors %}border-red-300{% endif %}">
+                    </div>
+                    {% if form.order.errors %}
+                    <p class="mt-2 text-sm text-red-600">
+                        {% for error in form.order.errors %}{{ error }}{% endfor %}
+                    </p>
+                    {% endif %}
+                    <p class="mt-2 text-sm text-gray-500">Ordem de exibição nos relatórios</p>
+                </div>
+
+                {% if object %}
+                <div class="sm:col-span-2">
+                    <div class="flex items-center">
+                        <input type="checkbox" name="{{ form.is_active.name }}" id="{{ form.is_active.id_for_label }}" {% if form.is_active.value %}checked{% endif %} class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                        <label for="{{ form.is_active.id_for_label }}" class="ml-2 block text-sm font-medium text-gray-700">
+                            {{ form.is_active.label }}
+                        </label>
+                    </div>
+                    {% if form.is_active.errors %}
+                    <p class="mt-2 text-sm text-red-600">
+                        {% for error in form.is_active.errors %}{{ error }}{% endfor %}
+                    </p>
+                    {% endif %}
+                    <p class="mt-2 text-sm text-gray-500">Desative para excluir temporariamente</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Debug: Mostrar o company_id -->
+        <div class="alert alert-info">
+            <p><strong>Debug:</strong> Company ID: {{ company_id }}</p>
+        </div>
+
+        <div class="pt-5">
+            <div class="flex justify-end">
+                <button type="submit" class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Salvar Item
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const isPercentageCheckbox = document.getElementById('{{ form.is_percentage.id_for_label }}');
+        const valueHelpPercentage = document.getElementById('value_help_percentage');
+        const valueHelpFixed = document.getElementById('value_help_fixed');
+        
+        isPercentageCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                valueHelpPercentage.classList.remove('hidden');
+                valueHelpFixed.classList.add('hidden');
+            } else {
+                valueHelpPercentage.classList.add('hidden');
+                valueHelpFixed.classList.remove('hidden');
+            }
+        });
+
+        // Inicialização do Select2 para os campos de conta
+        $(document).ready(function() {
+            // Obter o company_id do contexto
+            const companyId = "{{ company_id }}";
+            console.log("Company ID:", companyId);
+            
+            // Debug: mostrar informações sobre os elementos do formulário
+            console.log("Elementos do formulário:", {
+                debitAccountId: "{{ form.debit_account.id_for_label }}",
+                debitAccountElement: document.getElementById("{{ form.debit_account.id_for_label }}"),
+                creditAccountId: "{{ form.credit_account.id_for_label }}",
+                creditAccountElement: document.getElementById("{{ form.credit_account.id_for_label }}"),
+                companyId: companyId
+            });
+            
+            // Função para inicializar o Select2 para um campo de conta
+            function initAccountSelect2(elementId, placeholder) {
+                if (!document.getElementById(elementId)) {
+                    console.error(`Elemento ${elementId} não encontrado!`);
+                    return;
+                }
+                
+                console.log(`Inicializando Select2 para ${elementId}`);
+                
+                $(`#${elementId}`).select2({
+                    placeholder: placeholder,
+                    allowClear: true,
+                    width: '100%',
+                    minimumInputLength: 0,
+                    ajax: {
+                        url: "{% url 'account_search' %}",
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return {
+                                term: params.term || "",
+                                company_id: companyId
+                            };
+                        },
+                        processResults: function(data) {
+                            console.log("Resultados recebidos:", data);
+                            return data;
+                        },
+                        cache: true
+                    }
+                });
+            }
+            
+            // Inicializar Select2 para ambos os campos de conta
+            initAccountSelect2(
+                "{{ form.debit_account.id_for_label }}", 
+                "Clique com o Mouse ou Barra de Espaço para Pesquisar conta de débito..."
+            );
+            
+            initAccountSelect2(
+                "{{ form.credit_account.id_for_label }}", 
+                "Clique com o Mouse ou Barra de Espaço para Pesquisar conta de crédito..."
+            );
+        });
+    });
+</script>
+{% endblock %}
