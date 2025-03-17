@@ -1,13 +1,13 @@
 from django.views.generic import FormView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
-from django.shortcuts import redirect
+from django.shortcuts import redirect, get_object_or_404
 from django.contrib import messages
 from django.utils.translation import gettext as _
 
 from .ai_forms import AIAccountPlanForm
 from .services import AIService
-from .models import Account
+from .models import Account, Company
 
 class AIAccountPlanGeneratorView(LoginRequiredMixin, FormView):
     """View para gerar plano de contas usando IA"""
@@ -19,7 +19,38 @@ class AIAccountPlanGeneratorView(LoginRequiredMixin, FormView):
         context = super().get_context_data(**kwargs)
         context['title'] = _('Geração de Plano de Contas com IA')
         context['subtitle'] = _('Forneça informações sobre o negócio para gerar um plano de contas personalizado')
+        
+        # Obter a empresa atual e seu regime tributário
+        current_company_id = self.request.session.get('current_company_id')
+        if current_company_id:
+            try:
+                company = Company.objects.get(id=current_company_id)
+                context['company_tax_regime'] = company.get_tax_regime_display()
+                context['company_name'] = company.name
+            except Company.DoesNotExist:
+                pass
+                
         return context
+    
+    def get_initial(self):
+        """Preenche o campo tax_regime com o regime tributário da empresa atual"""
+        initial = super().get_initial()
+        current_company_id = self.request.session.get('current_company_id')
+        
+        if current_company_id:
+            try:
+                company = Company.objects.get(id=current_company_id)
+                # Mapear o regime tributário do modelo para o valor esperado no formulário
+                tax_regime_mapping = {
+                    'SN': 'simples',
+                    'LP': 'lucro_presumido',
+                    'LR': 'lucro_real'
+                }
+                initial['tax_regime'] = tax_regime_mapping.get(company.tax_regime, 'simples')
+            except Company.DoesNotExist:
+                pass
+                
+        return initial
     
     def form_valid(self, form):
         # Obter a empresa atual do usuário
@@ -28,18 +59,31 @@ class AIAccountPlanGeneratorView(LoginRequiredMixin, FormView):
             messages.error(self.request, _('Selecione uma empresa antes de gerar um plano de contas.'))
             return redirect('company_list')
         
+        # Obter a empresa e seu regime tributário
+        try:
+            company = Company.objects.get(id=current_company_id)
+            # Mapear o regime tributário do modelo para o valor esperado no formulário
+            tax_regime_mapping = {
+                'SN': 'simples',
+                'LP': 'lucro_presumido',
+                'LR': 'lucro_real'
+            }
+            tax_regime = tax_regime_mapping.get(company.tax_regime, 'simples')
+        except Company.DoesNotExist:
+            messages.error(self.request, _('Empresa não encontrada.'))
+            return redirect('company_list')
+        
         # Preparar os dados para a API da AIService
         business_type = form.cleaned_data['business_type']
         business_subtype = form.cleaned_data['business_subtype']
         business_size = form.cleaned_data['business_size']
-        tax_regime = form.cleaned_data['tax_regime']
         additional_details = form.cleaned_data['additional_details']
         
         # Construir descrição detalhada do negócio
         business_details = f"""
         Subtipo/Segmento: {business_subtype}
         Porte da Empresa: {dict(form.fields['business_size'].choices)[business_size]}
-        Regime Tributário: {dict(form.fields['tax_regime'].choices)[tax_regime]}
+        Regime Tributário: {company.get_tax_regime_display()}
         Detalhes Adicionais: {additional_details}
         """
         

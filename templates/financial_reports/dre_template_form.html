@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+    {% if form.instance.pk %}
+        {% trans "Editar Template de DRE" %}
+    {% else %}
+        {% trans "Novo Template de DRE" %}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">
+            {% if form.instance.pk %}
+                {% trans "Editar Template de DRE" %}
+            {% else %}
+                {% trans "Novo Template de DRE" %}
+            {% endif %}
+        </h1>
+        <a href="{% if form.instance.pk %}{% url 'dre_template_detail' form.instance.pk %}{% else %}{% url 'dre_template_list' %}{% endif %}" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded">
+            <i class="fas fa-arrow-left mr-2"></i>{% trans "Voltar" %}
+        </a>
+    </div>
+
+    <div class="bg-white shadow rounded-lg p-6">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    {{ form.name|as_crispy_field }}
+                </div>
+                <div>
+                    {{ form.tax_regime|as_crispy_field }}
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                {{ form.description|as_crispy_field }}
+            </div>
+            
+            <div class="mt-4">
+                <div class="flex items-center">
+                    {{ form.is_active }}
+                    <label for="{{ form.is_active.id_for_label }}" class="ml-2 block text-sm text-gray-900">
+                        {% trans "Ativo" %}
+                    </label>
+                </div>
+                {% if form.is_active.errors %}
+                    <div class="text-red-500 text-sm mt-1">{{ form.is_active.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mt-6 flex justify-end">
+                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">
+                    <i class="fas fa-save mr-2"></i>{% trans "Salvar" %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

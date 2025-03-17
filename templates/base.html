@@ -245,6 +245,7 @@
                         <!-- Links para os relatórios -->
                         <a href="{% url 'balance_sheet' %}" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100 {% if 'balance_sheet' in request.resolver_match.url_name %}bg-blue-50 text-blue-600{% endif %}">Balanço Patrimonial</a>
                         <a href="{% url 'income_statement' %}" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100 {% if 'income_statement' in request.resolver_match.url_name %}bg-blue-50 text-blue-600{% endif %}">DRE</a>
+                        <a href="{% url 'dre_report_list' %}" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100 {% if 'dre_report' in request.resolver_match.url_name %}bg-blue-50 text-blue-600{% endif %}">DRE (Novo)</a>
                         <a href="{% url 'cash_flow' %}" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100 {% if 'cash_flow' in request.resolver_match.url_name %}bg-blue-50 text-blue-600{% endif %}">Fluxo de Caixa</a>
                         <a href="{% url 'trial_balance' %}" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100 {% if 'trial_balance' in request.resolver_match.url_name %}bg-blue-50 text-blue-600{% endif %}">Balancete</a>
                         <a href="{% url 'general_ledger' %}" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100 {% if 'general_ledger' in request.resolver_match.url_name %}bg-blue-50 text-blue-600{% endif %}">Razão</a>
@@ -257,6 +258,25 @@
                     <i class="fas fa-book mr-3"></i>
                     Documentação
                 </a>
+
+                <!-- Menu de Administração (apenas para admin) -->
+                {% if request.user.is_superuser or request.user.is_staff %}
+                <div x-data="{ open: false }" class="relative">
+                    <button @click="open = !open" 
+                            class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100">
+                        <div>
+                            <i class="fas fa-cogs mr-3"></i>
+                            Administração
+                        </div>
+                        <i class="fas fa-chevron-down text-sm transition-transform" :class="{ 'rotate-180': open }"></i>
+                    </button>
+                    <div x-show="open" class="ml-8 mt-1 space-y-1">
+                        <!-- Links para ferramentas administrativas -->
+                        <a href="{% url 'dre_template_list' %}" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100 {% if 'dre_template' in request.resolver_match.url_name %}bg-blue-50 text-blue-600{% endif %}">Templates de DRE</a>
+                        <a href="{% url 'admin:index' %}" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100">Painel Admin</a>
+                    </div>
+                </div>
+                {% endif %}
 
                 <!-- Sobre o Programa -->
                 <a href="{% url 'about' %}" 
@@ -298,7 +318,7 @@
                             </svg>
                             {% else %}
                             <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
                             </svg>
                             {% endif %}
                         </div>

@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{{ template.name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">{{ template.name }}</h1>
+            <p class="text-gray-600">
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                    {{ template.get_tax_regime_display }}
+                </span>
+                {% if template.is_active %}
+                    <span class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                        {% trans "Ativo" %}
+                    </span>
+                {% else %}
+                    <span class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                        {% trans "Inativo" %}
+                    </span>
+                {% endif %}
+            </p>
+        </div>
+        <div class="flex space-x-2">
+            <a href="{% url 'dre_template_edit' template.pk %}" class="bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-4 rounded">
+                <i class="fas fa-edit mr-2"></i>{% trans "Editar" %}
+            </a>
+            <a href="{% url 'dre_template_list' %}" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded">
+                <i class="fas fa-arrow-left mr-2"></i>{% trans "Voltar" %}
+            </a>
+        </div>
+    </div>
+
+    {% if template.description %}
+        <div class="bg-white shadow rounded-lg p-4 mb-6">
+            <h2 class="text-lg font-semibold mb-2">{% trans "Descrição" %}</h2>
+            <p class="text-gray-700">{{ template.description }}</p>
+        </div>
+    {% endif %}
+
+    <!-- Seções do Template -->
+    <div class="bg-white shadow rounded-lg overflow-hidden mb-6">
+        <div class="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+            <h2 class="text-lg font-semibold">{% trans "Seções do DRE" %}</h2>
+            <a href="{% url 'dre_section_create' template.pk %}" class="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded text-sm">
+                <i class="fas fa-plus mr-1"></i>{% trans "Nova Seção" %}
+            </a>
+        </div>
+
+        {% if sections %}
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Ordem" %}
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Nome" %}
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Tipo" %}
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Seção Pai" %}
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Fórmula" %}
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Ações" %}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for section in sections %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ section.order }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ section.name }}</div>
+                                {% if section.description %}
+                                    <div class="text-sm text-gray-500">{{ section.description|truncatechars:50 }}</div>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if section.is_subtotal %}
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                        {% trans "Subtotal" %}
+                                    </span>
+                                {% else %}
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                        {% trans "Regular" %}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ section.parent.name|default:"-" }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {% if section.formula %}
+                                    <code class="bg-gray-100 px-2 py-1 rounded">{{ section.formula|truncatechars:30 }}</code>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <a href="{% url 'dre_section_edit' section.pk %}" class="text-indigo-600 hover:text-indigo-900 mr-3">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'dre_section_delete' section.pk %}" class="text-red-600 hover:text-red-900">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="p-6 text-center">
+                <p class="text-gray-500">{% trans "Nenhuma seção cadastrada para este template." %}</p>
+                <a href="{% url 'dre_section_create' template.pk %}" class="mt-4 inline-block bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">
+                    <i class="fas fa-plus mr-2"></i>{% trans "Adicionar Seção" %}
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

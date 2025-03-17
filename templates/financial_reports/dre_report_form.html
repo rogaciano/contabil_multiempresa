@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Novo Relatório de DRE" %}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">{% trans "Novo Relatório de DRE" %}</h1>
+        <a href="{% url 'dre_report_list' %}" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded">
+            <i class="fas fa-arrow-left mr-2"></i>{% trans "Voltar" %}
+        </a>
+    </div>
+
+    {% if company %}
+        <div class="bg-white shadow rounded-lg p-4 mb-6">
+            <h2 class="text-lg font-semibold mb-2">{% trans "Empresa" %}</h2>
+            <div class="flex items-center">
+                <div class="text-gray-700">
+                    <p class="font-medium">{{ company.name }}</p>
+                    <p class="text-sm">{{ company.tax_id|default:"-" }}</p>
+                </div>
+                <div class="ml-auto">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                        {{ company.get_tax_regime_display }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        {% if available_templates %}
+            <div class="bg-white shadow rounded-lg p-6">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            {{ form.title|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                        <div>
+                            {{ form.start_date|as_crispy_field }}
+                        </div>
+                        <div>
+                            {{ form.end_date|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        {{ form.notes|as_crispy_field }}
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end">
+                        <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">
+                            <i class="fas fa-save mr-2"></i>{% trans "Gerar Relatório" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        {% else %}
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-yellow-700">
+                            {% trans "Não há templates de DRE disponíveis para o regime tributário" %} {{ company.get_tax_regime_display }}.
+                        </p>
+                        <p class="text-sm text-yellow-700 mt-2">
+                            {% trans "Entre em contato com o administrador do sistema." %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-yellow-700">
+                        {% trans "Selecione uma empresa para criar um relatório de DRE." %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

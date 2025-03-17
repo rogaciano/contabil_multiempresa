@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Confirmar Exclusão" %}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="bg-white shadow rounded-lg p-6 max-w-lg mx-auto">
+        <h1 class="text-2xl font-bold text-gray-800 mb-4">{% trans "Confirmar Exclusão" %}</h1>
+        
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-yellow-700">
+                        {% trans "Tem certeza que deseja excluir a seção de DRE" %} <strong>{{ object.name }}</strong>?
+                    </p>
+                    <p class="text-sm text-yellow-700 mt-2">
+                        {% trans "Esta ação não poderá ser desfeita." %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="flex justify-end space-x-3">
+                <a href="{% url 'dre_template_detail' object.template.pk %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded">
+                    {% trans "Cancelar" %}
+                </a>
+                <button type="submit" class="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded">
+                    {% trans "Confirmar Exclusão" %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

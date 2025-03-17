@@ -11,6 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from django.db import transaction as db_transaction
 from decimal import Decimal
 from datetime import date
+import json
 
 from transactions.models import TransactionTemplate, Transaction
 
@@ -53,10 +54,23 @@ class TransactionFromTemplateView(LoginRequiredMixin, View):
             messages.error(request, _('Este template não possui itens configurados.'))
             return redirect('transaction_template_list')
         
+        # Preparar dados dos itens para o JavaScript
+        items_data = []
+        for item in items:
+            items_data.append({
+                'id': item.id,
+                'description': item.description,
+                'debitAccount': f"{item.debit_account.code} - {item.debit_account.name}",
+                'creditAccount': f"{item.credit_account.code} - {item.credit_account.name}",
+                'value': float(item.value) if item.value else None,
+                'isPercentage': item.is_percentage
+            })
+        
         # Preparar contexto
         context = {
             'template': self.template,
             'items': items,
+            'items_json': json.dumps(items_data),
             'today': date.today().strftime('%Y-%m-%d'),
         }
         
@@ -99,10 +113,23 @@ class TransactionFromTemplateView(LoginRequiredMixin, View):
             # Obter os itens do template
             items = self.template.items.filter(is_active=True).order_by('order', 'id')
             
+            # Preparar dados dos itens para o JavaScript
+            items_data = []
+            for item in items:
+                items_data.append({
+                    'id': item.id,
+                    'description': item.description,
+                    'debitAccount': f"{item.debit_account.code} - {item.debit_account.name}",
+                    'creditAccount': f"{item.credit_account.code} - {item.credit_account.name}",
+                    'value': float(item.value) if item.value else None,
+                    'isPercentage': item.is_percentage
+                })
+            
             # Preparar contexto
             context = {
                 'template': self.template,
                 'items': items,
+                'items_json': json.dumps(items_data),
                 'today': transaction_date or date.today().strftime('%Y-%m-%d'),
                 'description': description,
                 'reference': reference,
@@ -142,15 +169,15 @@ class TransactionFromTemplateView(LoginRequiredMixin, View):
                         company_id=request.session.get('current_company_id'),
                         date=transaction_date,
                         description=f"{description} - {item.description}" if item.description else description,
-                        reference=reference,
                         debit_account=item.debit_account,
                         credit_account=item.credit_account,
-                        value=transaction_value,
+                        amount=transaction_value,
+                        document_number=reference if reference else "",
                         created_by=request.user
                     )
                 
                 messages.success(request, _('Lançamentos criados com sucesso!'))
-                return redirect('transaction_list')
+                return redirect('transaction_template_list')
                 
         except Exception as e:
             messages.error(request, _('Erro ao criar lançamentos: {}').format(str(e)))

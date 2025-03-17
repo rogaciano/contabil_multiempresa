@@ -1,5 +1,6 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
+from .models import Company
 
 class AIAccountPlanForm(forms.Form):
     """Formulário para coletar informações para geração de plano de contas com IA"""
@@ -36,14 +37,10 @@ class AIAccountPlanForm(forms.Form):
         required=True,
     )
     
-    tax_regime = forms.ChoiceField(
-        label=_('Regime Tributário'),
-        choices=[
-            ('simples', _('Simples Nacional')),
-            ('lucro_presumido', _('Lucro Presumido')),
-            ('lucro_real', _('Lucro Real')),
-        ],
-        required=True,
+    # Campo oculto que será preenchido automaticamente com o regime tributário da empresa ativa
+    tax_regime = forms.CharField(
+        widget=forms.HiddenInput(),
+        required=False
     )
     
     additional_details = forms.CharField(

@@ -27,8 +27,14 @@ class UserProfile(models.Model):
 
 
 class Company(models.Model):
+    class TaxRegime(models.TextChoices):
+        SIMPLES_NACIONAL = 'SN', _('Simples Nacional')
+        LUCRO_REAL = 'LR', _('Lucro Real')
+        LUCRO_PRESUMIDO = 'LP', _('Lucro Presumido')
+    
     name = models.CharField(_('Nome'), max_length=100)
     tax_id = models.CharField(_('CNPJ'), max_length=14, unique=True)
+    tax_regime = models.CharField(_('Regime Tributário'), max_length=2, choices=TaxRegime.choices, default=TaxRegime.SIMPLES_NACIONAL)
     address = models.TextField(_('Endereço'), blank=True)
     phone = models.CharField(_('Telefone'), max_length=20, blank=True)
     email = models.EmailField(_('Email'), blank=True)

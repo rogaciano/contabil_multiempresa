@@ -58,3 +58,13 @@ class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         fields = []  # Por enquanto, não temos campos adicionais para editar
+
+
+class CompanyForm(forms.ModelForm):
+    class Meta:
+        model = Company
+        fields = ['name', 'tax_id', 'tax_regime', 'address', 'phone', 'email']
+        widgets = {
+            'address': forms.Textarea(attrs={'rows': 3}),
+            'tax_regime': forms.Select(attrs={'class': 'form-select'}),
+        }

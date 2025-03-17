@@ -12,6 +12,7 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('transactions/', include('transactions.urls')),
     path('reports/', include('reports.urls')),
+    path('financial-reports/', include('financial_reports.urls')),
     path('select2/', include('django_select2.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

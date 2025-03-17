@@ -45,7 +45,16 @@
                 </div>
                 
                 <div class="mb-4">
-                    {{ form.tax_regime|as_crispy_field }}
+                    {{ form.tax_regime }}
+                    <div class="form-group">
+                        <label class="form-label">Regime Tributário</label>
+                        <div class="bg-gray-100 p-3 rounded border border-gray-300">
+                            <div class="flex items-center">
+                                <span class="text-gray-700">{{ company_tax_regime }}</span>
+                                <span class="ml-2 text-xs text-gray-500">(Baseado na empresa atual: {{ company_name }})</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
                 <div>

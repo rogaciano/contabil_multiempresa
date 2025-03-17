@@ -51,10 +51,11 @@ INSTALLED_APPS = [
     'django_select2',
     
     # Local apps
-    'core',
     'accounts',
+    'core',
     'transactions',
     'reports',
+    'financial_reports',
 ]
 
 MIDDLEWARE = [

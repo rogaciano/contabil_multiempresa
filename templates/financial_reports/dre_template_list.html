@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "Templates de DRE" %}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">{% trans "Templates de DRE" %}</h1>
+        <a href="{% url 'dre_template_create' %}" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">
+            <i class="fas fa-plus mr-2"></i>{% trans "Novo Template" %}
+        </a>
+    </div>
+
+    <!-- Filtros -->
+    <div class="bg-white shadow rounded-lg p-4 mb-6">
+        <h2 class="text-lg font-semibold mb-4">{% trans "Filtros" %}</h2>
+        <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label for="tax_regime" class="block text-sm font-medium text-gray-700 mb-1">{% trans "Regime Tributário" %}</label>
+                <select name="tax_regime" id="tax_regime" class="form-select w-full rounded-md border-gray-300">
+                    <option value="">{% trans "Todos" %}</option>
+                    {% for value, label in tax_regimes %}
+                        <option value="{{ value }}" {% if request.GET.tax_regime == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="is_active" class="block text-sm font-medium text-gray-700 mb-1">{% trans "Status" %}</label>
+                <select name="is_active" id="is_active" class="form-select w-full rounded-md border-gray-300">
+                    <option value="">{% trans "Todos" %}</option>
+                    <option value="true" {% if request.GET.is_active == 'true' %}selected{% endif %}>{% trans "Ativo" %}</option>
+                    <option value="false" {% if request.GET.is_active == 'false' %}selected{% endif %}>{% trans "Inativo" %}</option>
+                </select>
+            </div>
+            <div class="flex items-end">
+                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">
+                    <i class="fas fa-search mr-2"></i>{% trans "Filtrar" %}
+                </button>
+                <a href="{% url 'dre_template_list' %}" class="ml-2 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded">
+                    <i class="fas fa-times mr-2"></i>{% trans "Limpar" %}
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Lista de Templates -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        {% if templates %}
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Nome" %}
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Regime Tributário" %}
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Status" %}
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Seções" %}
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Ações" %}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for template in templates %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ template.name }}</div>
+                                {% if template.description %}
+                                    <div class="text-sm text-gray-500">{{ template.description|truncatechars:50 }}</div>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                    {{ template.get_tax_regime_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if template.is_active %}
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        {% trans "Ativo" %}
+                                    </span>
+                                {% else %}
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                        {% trans "Inativo" %}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ template.sections.count }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <a href="{% url 'dre_template_detail' template.pk %}" class="text-blue-600 hover:text-blue-900 mr-3">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'dre_template_edit' template.pk %}" class="text-indigo-600 hover:text-indigo-900 mr-3">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'dre_template_delete' template.pk %}" class="text-red-600 hover:text-red-900">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="p-6 text-center">
+                <p class="text-gray-500">{% trans "Nenhum template de DRE encontrado." %}</p>
+                <a href="{% url 'dre_template_create' %}" class="mt-4 inline-block bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">
+                    <i class="fas fa-plus mr-2"></i>{% trans "Criar Novo Template" %}
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

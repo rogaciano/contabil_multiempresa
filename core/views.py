@@ -25,6 +25,7 @@ from accounts.models import Account, UserProfile, Company
 from transactions.models import Transaction
 from .models import FiscalYear, UserActivationToken, AccessLog
 from .forms import FiscalYearForm, FiscalYearCloseForm, UserRegistrationForm
+from accounts.forms import CompanyForm
 
 import uuid
 
@@ -343,7 +344,7 @@ class CompanyDetailView(LoginRequiredMixin, DetailView):
 class CompanyCreateView(LoginRequiredMixin, CreateView):
     model = Company
     template_name = 'core/company_form.html'
-    fields = ['name', 'tax_id', 'address', 'phone', 'email']
+    form_class = CompanyForm
     success_url = reverse_lazy('company_list')
     
     def form_valid(self, form):
@@ -353,37 +354,37 @@ class CompanyCreateView(LoginRequiredMixin, CreateView):
         try:
             user_profile = self.request.user.profile
         except UserProfile.DoesNotExist:
+            # Criar perfil se não existir
             user_profile = UserProfile.objects.create(user=self.request.user)
         
+        # Adicionar a empresa ao perfil
         user_profile.companies.add(self.object)
         
-        # Definir como empresa atual
+        # Atualizar a última empresa utilizada
+        user_profile.last_company_id = self.object.id
+        user_profile.save(update_fields=['last_company_id'])
+        
+        # Definir a empresa atual na sessão
         self.request.session['current_company_id'] = self.object.id
         
         messages.success(self.request, _('Empresa criada com sucesso!'))
         return response
 
-
 class CompanyUpdateView(LoginRequiredMixin, UpdateView):
     model = Company
     template_name = 'core/company_form.html'
-    fields = ['name', 'tax_id', 'address', 'phone', 'email']
+    form_class = CompanyForm
     
     def get_queryset(self):
-        try:
-            user_profile = self.request.user.profile
-            return user_profile.companies.all()
-        except UserProfile.DoesNotExist:
-            return Company.objects.none()
+        # Filtrar apenas empresas do usuário atual
+        return Company.objects.filter(users=self.request.user.profile)
     
     def get_success_url(self):
         return reverse('company_detail', kwargs={'pk': self.object.pk})
     
     def form_valid(self, form):
-        response = super().form_valid(form)
         messages.success(self.request, _('Empresa atualizada com sucesso!'))
-        return response
-
+        return super().form_valid(form)
 
 class CompanyDeleteView(LoginRequiredMixin, DeleteView):
     model = Company
